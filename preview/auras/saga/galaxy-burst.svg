@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="sagaRay" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="12%" stop-color="#fef08a"/>
+      <stop offset="35%" stop-color="#fbbf24"/>
+      <stop offset="65%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#f97316" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="sagaCore" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="35%" stop-color="#fef08a"/>
+      <stop offset="100%" stop-color="#f97316" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <g opacity="0.95">
+    <path d="M256 256 L268 0 L244 0 Z" fill="url(#sagaRay)"/>
+    <path d="M256 256 L340 28 L318 18 Z" fill="url(#sagaRay)"/>
+    <path d="M256 256 L412 88 L396 72 Z" fill="url(#sagaRay)"/>
+    <path d="M256 256 L484 180 L468 168 Z" fill="url(#sagaRay)"/>
+    <path d="M256 256 L512 256 L500 244 Z" fill="url(#sagaRay)"/>
+    <path d="M256 256 L484 332 L468 344 Z" fill="url(#sagaRay)"/>
+    <path d="M256 256 L412 424 L396 440 Z" fill="url(#sagaRay)"/>
+    <path d="M256 256 L340 484 L318 494 Z" fill="url(#sagaRay)"/>
+    <path d="M256 256 L268 512 L244 512 Z" fill="url(#sagaRay)"/>
+    <path d="M256 256 L172 484 L194 494 Z" fill="url(#sagaRay)"/>
+    <path d="M256 256 L100 424 L116 440 Z" fill="url(#sagaRay)"/>
+    <path d="M256 256 L28 332 L44 344 Z" fill="url(#sagaRay)"/>
+    <path d="M256 256 L0 256 L12 244 Z" fill="url(#sagaRay)"/>
+    <path d="M256 256 L28 180 L44 168 Z" fill="url(#sagaRay)"/>
+    <path d="M256 256 L100 88 L116 72 Z" fill="url(#sagaRay)"/>
+    <path d="M256 256 L172 28 L194 18 Z" fill="url(#sagaRay)"/>
+  </g>
+  <circle cx="256" cy="256" r="42" fill="url(#sagaCore)"/>
+  <circle cx="256" cy="256" r="18" fill="#ffffff" opacity="0.95"/>
+</svg>

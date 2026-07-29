@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <defs>
+    <pattern id="petals" width="120" height="120" patternUnits="userSpaceOnUse">
+      <ellipse cx="18" cy="22" rx="8" ry="5" fill="#e879f9" opacity="0.22" transform="rotate(-30 18 22)"/>
+      <ellipse cx="52" cy="14" rx="7" ry="4" fill="#c084fc" opacity="0.18" transform="rotate(20 52 14)"/>
+      <ellipse cx="88" cy="28" rx="8" ry="5" fill="#d8b4fe" opacity="0.2" transform="rotate(-15 88 28)"/>
+      <ellipse cx="30" cy="58" rx="9" ry="5" fill="#a855f7" opacity="0.16" transform="rotate(35 30 58)"/>
+      <ellipse cx="72" cy="48" rx="7" ry="4" fill="#f0abfc" opacity="0.19" transform="rotate(-40 72 48)"/>
+      <ellipse cx="102" cy="72" rx="8" ry="5" fill="#c084fc" opacity="0.17" transform="rotate(12 102 72)"/>
+      <ellipse cx="14" cy="92" rx="7" ry="4" fill="#e879f9" opacity="0.2" transform="rotate(-22 14 92)"/>
+      <ellipse cx="48" cy="98" rx="8" ry="5" fill="#d8b4fe" opacity="0.18" transform="rotate(28 48 98)"/>
+      <ellipse cx="84" cy="104" rx="7" ry="4" fill="#a855f7" opacity="0.15" transform="rotate(-8 84 104)"/>
+    </pattern>
+  </defs>
+  <rect width="120" height="120" fill="url(#petals)"/>
+</svg>

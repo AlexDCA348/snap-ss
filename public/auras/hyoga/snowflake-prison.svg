@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="none" shape-rendering="geometricPrecision">
+  <defs>
+    <radialGradient id="hyogaPrisonGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#f0f9ff" stop-opacity="0.55"/>
+      <stop offset="55%" stop-color="#bae6fd" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#312e81" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="48" cy="48" r="44" fill="url(#hyogaPrisonGlow)"/>
+  <g stroke="#f8fafc" stroke-width="2.4" stroke-linecap="round" opacity="0.98">
+    <path d="M48 6v84M48 6l-6 10M48 6l6 10M48 90l-6-10M48 90l6-10"/>
+    <path d="M6 48h84M6 48l10-6M6 48l10 6M90 48l-10-6M90 48l-10 6"/>
+    <path d="M18 18l60 60M18 78l60-60"/>
+    <path d="M48 18l-5 8 5 3 5-3-5-8M48 78l-5-8 5-3 5 3-5 8"/>
+    <path d="M18 48l8-5 3 5-3 5-8-5M78 48l-8-5-3 5 3 5 8-5"/>
+    <path d="M48 28l-3 5 3 2 3-2-3-5M48 68l-3-5 3-2 3 2-3 5"/>
+    <path d="M28 48l5-3 2 3-2 3-5-3M68 48l-5-3-2 3 2 3 5-3"/>
+  </g>
+  <g stroke="#93c5fd" stroke-width="1.4" stroke-linecap="round" opacity="0.85">
+    <path d="M48 14l-2 4 2 1 2-1-2-4M48 82l-2-4 2-1 2 1-2 4"/>
+    <path d="M14 48l4-2 1 2-1 2-4-2M82 48l-4-2-1 2 1 2 4-2"/>
+    <path d="M24 24l14 14M24 72l14-14M72 24L58 38M72 72 58 58"/>
+  </g>
+  <circle cx="48" cy="48" r="5" fill="#fff" opacity="0.95"/>
+  <circle cx="48" cy="48" r="2.2" fill="#e0f2fe"/>
+</svg>

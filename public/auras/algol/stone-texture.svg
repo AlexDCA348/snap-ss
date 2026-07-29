@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">
+  <defs>
+    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a8a29e"/>
+      <stop offset="45%" stop-color="#78716c"/>
+      <stop offset="100%" stop-color="#57534e"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#d6d3d1"/>
+      <stop offset="55%" stop-color="#a8a29e"/>
+      <stop offset="100%" stop-color="#68625d"/>
+    </linearGradient>
+    <pattern id="stone" width="160" height="160" patternUnits="userSpaceOnUse">
+      <rect width="160" height="160" fill="#6b6560"/>
+      <path d="M0 0h78v52H0z" fill="url(#g1)" opacity="0.9"/>
+      <path d="M78 0h82v68H78z" fill="url(#g2)" opacity="0.85"/>
+      <path d="M0 52h92v58H0z" fill="#57534e" opacity="0.75"/>
+      <path d="M92 68h68v44H92z" fill="#78716c" opacity="0.8"/>
+      <path d="M0 110h64v50H0z" fill="url(#g2)" opacity="0.7"/>
+      <path d="M64 112h96v48H64z" fill="url(#g1)" opacity="0.82"/>
+      <path d="M18 24l22-8 16 14-12 18z" fill="#44403c" opacity="0.35"/>
+      <path d="M102 18l28 6-10 22-24-8z" fill="#292524" opacity="0.3"/>
+      <path d="M34 88l18-6 10 16-20 10z" fill="#44403c" opacity="0.28"/>
+      <path d="M118 96l20-4 8 18-22 6z" fill="#292524" opacity="0.32"/>
+      <line x1="78" y1="0" x2="78" y2="160" stroke="#292524" stroke-width="1.2" opacity="0.45"/>
+      <line x1="0" y1="52" x2="160" y2="52" stroke="#292524" stroke-width="1" opacity="0.35"/>
+      <line x1="92" y1="68" x2="92" y2="160" stroke="#292524" stroke-width="0.9" opacity="0.3"/>
+      <line x1="0" y1="110" x2="160" y2="110" stroke="#292524" stroke-width="1" opacity="0.38"/>
+    </pattern>
+  </defs>
+  <rect width="160" height="160" fill="url(#stone)"/>
+</svg>

@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" fill="none">
+  <defs>
+    <linearGradient id="ikkiWingL" x1="100%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#7f1d1d"/>
+      <stop offset="45%" stop-color="#ea580c"/>
+      <stop offset="78%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#fff7ed"/>
+    </linearGradient>
+    <linearGradient id="ikkiWingR" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7f1d1d"/>
+      <stop offset="45%" stop-color="#ea580c"/>
+      <stop offset="78%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#fff7ed"/>
+    </linearGradient>
+    <radialGradient id="ikkiCore" cx="50%" cy="62%" r="42%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="35%" stop-color="#fef08a"/>
+      <stop offset="70%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#b91c1c"/>
+    </radialGradient>
+    <filter id="ikkiGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#ikkiGlow)">
+    <!-- Aile gauche -->
+    <path
+      d="M78 72 C62 68 42 58 22 42 C14 34 8 22 6 10 C18 18 30 28 42 36 C54 44 66 52 76 58 C70 62 74 68 78 72 Z"
+      fill="url(#ikkiWingL)"
+      opacity="0.92"
+    />
+    <path
+      d="M74 66 C58 54 40 40 24 26 C34 32 48 42 60 50 C66 54 72 60 74 66 Z"
+      fill="#fde68a"
+      opacity="0.35"
+    />
+    <!-- Aile droite -->
+    <path
+      d="M82 72 C98 68 118 58 138 42 C146 34 152 22 154 10 C142 18 130 28 118 36 C106 44 94 52 84 58 C90 62 86 68 82 72 Z"
+      fill="url(#ikkiWingR)"
+      opacity="0.92"
+    />
+    <path
+      d="M86 66 C102 54 120 40 136 26 C126 32 112 42 100 50 C94 54 88 60 86 66 Z"
+      fill="#fde68a"
+      opacity="0.35"
+    />
+    <!-- Corps -->
+    <ellipse cx="80" cy="74" rx="14" ry="18" fill="url(#ikkiCore)"/>
+  </g>
+  <!-- Tête -->
+  <path d="M80 52 C76 46 78 40 84 38 C90 40 92 46 88 52 Z" fill="#fbbf24"/>
+  <path d="M84 38 L92 32 L88 40 Z" fill="#fef08a"/>
+  <ellipse cx="86" cy="42" rx="2.2" ry="2.8" fill="#7f1d1d"/>
+  <ellipse cx="86.5" cy="41.5" rx="0.8" ry="1" fill="#fef2f2"/>
+  <!-- Queue / flammes basses -->
+  <path
+    d="M72 88 C68 96 74 104 80 108 C86 104 92 96 88 88 C84 92 76 92 72 88 Z"
+    fill="#f97316"
+    opacity="0.85"
+  />
+</svg>

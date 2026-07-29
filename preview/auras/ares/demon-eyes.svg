@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 360" fill="none" aria-hidden="true">
+  <defs>
+    <radialGradient id="ares-eye-fill" cx="50%" cy="42%" r="68%">
+      <stop offset="0%" stop-color="#ff7b7b"/>
+      <stop offset="42%" stop-color="#ef4444"/>
+      <stop offset="78%" stop-color="#b91c1c"/>
+      <stop offset="100%" stop-color="#7f1d1d"/>
+    </radialGradient>
+    <filter id="ares-eye-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Œil gauche -->
+  <g filter="url(#ares-eye-glow)">
+    <path
+      d="M 62 170 C 88 118, 128 108, 168 124 C 176 152, 168 196, 144 214 C 112 224, 78 210, 62 170 Z"
+      fill="url(#ares-eye-fill)"
+      stroke="#120404"
+      stroke-width="6"
+      stroke-linejoin="round"
+      stroke-linecap="round"
+    />
+    <path
+      d="M 118 214 C 132 188, 136 150, 124 126 C 140 122, 154 132, 160 150"
+      fill="none"
+      stroke="#450a0a"
+      stroke-width="2.5"
+      opacity="0.45"
+    />
+    <ellipse cx="122" cy="166" rx="6.5" ry="34" fill="#0a0202"/>
+    <ellipse cx="112" cy="146" rx="6" ry="11" fill="#fff" opacity="0.92"/>
+    <ellipse cx="130" cy="152" rx="3.5" ry="6" fill="#fff" opacity="0.7"/>
+    <ellipse cx="138" cy="168" rx="2" ry="3.5" fill="#ffe4e4" opacity="0.55"/>
+  </g>
+
+  <!-- Œil droit -->
+  <g filter="url(#ares-eye-glow)">
+    <path
+      d="M 298 170 C 272 118, 232 108, 192 124 C 184 152, 192 196, 216 214 C 248 224, 282 210, 298 170 Z"
+      fill="url(#ares-eye-fill)"
+      stroke="#120404"
+      stroke-width="6"
+      stroke-linejoin="round"
+      stroke-linecap="round"
+    />
+    <path
+      d="M 242 214 C 228 188, 224 150, 236 126 C 220 122, 206 132, 200 150"
+      fill="none"
+      stroke="#450a0a"
+      stroke-width="2.5"
+      opacity="0.45"
+    />
+    <ellipse cx="238" cy="166" rx="6.5" ry="34" fill="#0a0202"/>
+    <ellipse cx="248" cy="146" rx="6" ry="11" fill="#fff" opacity="0.92"/>
+    <ellipse cx="230" cy="152" rx="3.5" ry="6" fill="#fff" opacity="0.7"/>
+    <ellipse cx="222" cy="168" rx="2" ry="3.5" fill="#ffe4e4" opacity="0.55"/>
+  </g>
+</svg>

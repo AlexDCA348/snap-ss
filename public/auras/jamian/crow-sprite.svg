@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 48" fill="none" shape-rendering="geometricPrecision">
+  <defs>
+    <linearGradient id="crowWingL" x1="100%" y1="50%" x2="0%" y2="50%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="55%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#334155"/>
+    </linearGradient>
+    <linearGradient id="crowWingR" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="55%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#334155"/>
+    </linearGradient>
+  </defs>
+  <!-- Aile gauche -->
+  <path
+    d="M30 24 C22 22 12 18 4 12 C8 16 14 20 20 22 C18 24 24 26 30 24 Z"
+    fill="url(#crowWingL)"
+  />
+  <!-- Aile droite -->
+  <path
+    d="M34 24 C42 22 52 18 60 12 C56 16 50 20 44 22 C46 24 40 26 34 24 Z"
+    fill="url(#crowWingR)"
+  />
+  <!-- Corps -->
+  <ellipse cx="32" cy="26" rx="5" ry="7" fill="#111827"/>
+  <!-- T�te -->
+  <circle cx="32" cy="18" r="4.5" fill="#0f172a"/>
+  <path d="M36 17 L42 15 L36 19 Z" fill="#1f2937"/>
+  <circle cx="33.5" cy="17" r="1" fill="#64748b"/>
+  <!-- Queue -->
+  <path d="M28 32 L24 40 L32 36 L40 40 L36 32 Z" fill="#1e293b"/>
+</svg>

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 180" fill="none">
+  <defs>
+    <linearGradient id="s1" x1="50" y1="0" x2="50" y2="180" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f0f9ff"/>
+      <stop offset="0.25" stop-color="#7dd3fc"/>
+      <stop offset="0.55" stop-color="#3b82f6"/>
+      <stop offset="1" stop-color="#1e3a8a"/>
+    </linearGradient>
+    <linearGradient id="s2" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffffff" stop-opacity="0.95"/>
+      <stop offset="0.5" stop-color="#bae6fd"/>
+      <stop offset="1" stop-color="#2563eb" stop-opacity="0.7"/>
+    </linearGradient>
+    <linearGradient id="s3" x1="100" y1="0" x2="0" y2="100" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#e0f2fe"/>
+      <stop offset="1" stop-color="#1d4ed8"/>
+    </linearGradient>
+  </defs>
+  <polygon points="50,4 78,32 50,60 22,32" fill="url(#s2)" opacity="0.95"/>
+  <polygon points="50,28 72,52 50,76 28,52" fill="url(#s1)" opacity="0.88"/>
+  <polygon points="50,48 68,68 50,88 32,68" fill="url(#s3)" opacity="0.82"/>
+  <polygon points="50,64 62,80 50,96 38,80" fill="url(#s2)" opacity="0.75"/>
+  <polygon points="50,78 58,90 50,102 42,90" fill="#60a5fa" opacity="0.7"/>
+  <polygon points="50,92 54,100 50,108 46,100" fill="#93c5fd" opacity="0.65"/>
+  <polygon points="50,104 52,110 50,116 48,110" fill="#bfdbfe" opacity="0.55"/>
+  <polygon points="50,114 51,118 50,122 49,118" fill="#e0f2fe" opacity="0.5"/>
+</svg>

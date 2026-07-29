@@ -1,0 +1,50 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules/
+dist/
+dist-ssr
+*.local
+
+# Identifiants et configurations locales
+.env
+.env.*
+!.env.example
+**/sftp.json
+**/sftp-config.json
+**/credentials.json
+**/*.pem
+**/id_rsa
+.private/
+
+# Exports et artefacts générés
+snap-ssa/
+*.map
+*.zip
+*.mov
+*.mp4
+*-old.*
+*.bk
+
+# Échantillons et images sources non utilisées par l'application
+Card sample/
+logo-1.jpeg
+2177d9ef72d1888effeed53a6708b2ea.jpg
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.cursor/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

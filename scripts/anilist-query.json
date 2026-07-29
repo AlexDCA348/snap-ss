@@ -1,0 +1,3 @@
+{
+  "query": "query { Page(perPage: 1) { media(search: \"Saint Seiya\", type: ANIME, sort: POPULARITY_DESC) { id title { romaji } characters(perPage: 50) { edges { node { name { full } image { large } } } } } } } }"
+}

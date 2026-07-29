@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 140" fill="none">
+  <defs>
+    <linearGradient id="iceBody" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#e0f2fe" stop-opacity="0.92"/>
+      <stop offset="35%" stop-color="#bae6fd" stop-opacity="0.78"/>
+      <stop offset="70%" stop-color="#7dd3fc" stop-opacity="0.65"/>
+      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.82"/>
+    </linearGradient>
+    <linearGradient id="iceShine" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#fff" stop-opacity="0.75"/>
+      <stop offset="40%" stop-color="#f0f9ff" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#0ea5e9" stop-opacity="0.05"/>
+    </linearGradient>
+  </defs>
+  <path d="M8 24 L18 8 L42 4 L72 10 L90 28 L94 58 L88 108 L72 128 L38 134 L14 118 L4 78 Z" fill="url(#iceBody)" stroke="#7dd3fc" stroke-width="1.5" stroke-opacity="0.7"/>
+  <path d="M14 30 L24 18 L48 14 L68 20 L78 38 L80 72 L74 104 L56 118 L30 120 L16 92 L12 56 Z" fill="url(#iceShine)"/>
+  <path d="M22 42 L30 34 M58 22 L66 30 M74 58 L82 66 M28 88 L36 96" stroke="#f0f9ff" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
+  <ellipse cx="50" cy="132" rx="34" ry="6" fill="#0c4a6e" opacity="0.25"/>
+</svg>

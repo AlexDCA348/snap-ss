@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 220" fill="none">
+  <defs>
+    <linearGradient id="shiryuNeon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#86efac"/>
+      <stop offset="35%" stop-color="#4ade80"/>
+      <stop offset="70%" stop-color="#22c55e"/>
+      <stop offset="100%" stop-color="#16a34a"/>
+    </linearGradient>
+    <filter id="shiryuGlow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="2.2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <g filter="url(#shiryuGlow)" stroke="url(#shiryuNeon)" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Corps serpentin -->
+    <path
+      d="M78 196 C58 188 42 170 36 148 C30 126 34 104 48 86 C62 68 84 58 104 54 C124 50 140 56 148 70 C154 80 152 92 142 100 C128 112 106 116 86 118 C66 120 50 128 44 142 C38 156 44 172 58 182 C68 190 82 194 96 194"
+      stroke-width="3.2"
+      fill="none"
+      opacity="0.95"
+    />
+    <path
+      d="M52 132 C64 118 82 110 102 106 C118 103 132 106 140 116"
+      stroke-width="2"
+      fill="none"
+      opacity="0.75"
+    />
+    <path
+      d="M44 154 C56 140 74 132 94 128 C110 125 124 128 132 138"
+      stroke-width="2"
+      fill="none"
+      opacity="0.65"
+    />
+
+    <!-- Écailles -->
+    <path d="M62 124 C68 118 76 116 82 120" stroke-width="1.4" opacity="0.7"/>
+    <path d="M72 112 C78 106 86 104 92 108" stroke-width="1.4" opacity="0.7"/>
+    <path d="M84 100 C90 94 98 92 104 96" stroke-width="1.4" opacity="0.7"/>
+    <path d="M96 90 C102 84 110 82 116 86" stroke-width="1.4" opacity="0.7"/>
+    <path d="M108 82 C114 76 122 74 128 78" stroke-width="1.4" opacity="0.7"/>
+    <path d="M118 74 C124 68 132 66 138 70" stroke-width="1.4" opacity="0.7"/>
+    <path d="M54 146 C60 140 68 138 74 142" stroke-width="1.4" opacity="0.7"/>
+    <path d="M66 158 C72 152 80 150 86 154" stroke-width="1.4" opacity="0.7"/>
+    <path d="M78 170 C84 164 92 162 98 166" stroke-width="1.4" opacity="0.7"/>
+
+    <!-- Crinière / flammes dorsales -->
+    <path d="M98 58 C92 44 88 30 84 16" stroke-width="2.2" opacity="0.85"/>
+    <path d="M108 62 C106 46 104 32 100 18" stroke-width="2" opacity="0.8"/>
+    <path d="M118 68 C118 52 116 38 112 24" stroke-width="1.8" opacity="0.75"/>
+    <path d="M128 76 C130 60 128 46 124 32" stroke-width="1.8" opacity="0.7"/>
+    <path d="M88 64 C80 50 74 36 70 22" stroke-width="1.6" opacity="0.65"/>
+
+    <!-- Tête -->
+    <path
+      d="M104 54 C118 48 132 44 144 38 C150 34 154 30 156 24 C158 18 154 14 148 14 C140 14 130 18 120 24 C110 30 100 38 94 48 C90 56 92 64 100 68 C108 72 118 70 126 64"
+      stroke-width="2.8"
+      fill="none"
+    />
+    <path d="M126 64 C134 58 142 52 150 46" stroke-width="2" opacity="0.8"/>
+    <path d="M118 68 C126 74 134 78 142 80" stroke-width="2" opacity="0.75"/>
+
+    <!-- Mâchoire / dents -->
+    <path d="M148 38 C152 42 154 48 150 52 C146 56 138 56 132 52" stroke-width="2.2" fill="none"/>
+    <path d="M140 50 L138 56" stroke-width="1.6"/>
+    <path d="M146 50 L144 56" stroke-width="1.6"/>
+    <path d="M152 46 L150 52" stroke-width="1.6"/>
+
+    <!-- Œil -->
+    <ellipse cx="136" cy="34" rx="4.5" ry="5" fill="#bbf7d0" stroke="#4ade80" stroke-width="1.2"/>
+    <ellipse cx="137" cy="33" rx="1.6" ry="2.2" fill="#052e16"/>
+
+    <!-- Moustaches -->
+    <path d="M152 30 C162 24 172 18 180 12" stroke-width="1.8" opacity="0.9"/>
+    <path d="M150 36 C160 34 170 32 178 30" stroke-width="1.6" opacity="0.85"/>
+    <path d="M148 42 C158 44 168 46 176 50" stroke-width="1.4" opacity="0.8"/>
+
+    <!-- Pattes avant -->
+    <path d="M88 118 C82 128 76 136 70 144 C66 150 62 156 58 162" stroke-width="2.4"/>
+    <path d="M70 144 L64 150 L68 154 L74 148 Z" fill="#4ade80" stroke="#86efac" stroke-width="1"/>
+    <path d="M58 162 L52 168 L56 172 L62 166 Z" fill="#4ade80" stroke="#86efac" stroke-width="1"/>
+    <path d="M64 150 L58 154" stroke-width="1.4"/>
+    <path d="M62 166 L56 170" stroke-width="1.4"/>
+
+    <!-- Pattes arrière -->
+    <path d="M52 132 C46 142 40 150 34 158 C30 164 26 170 22 176" stroke-width="2.4"/>
+    <path d="M34 158 L28 164 L32 168 L38 162 Z" fill="#4ade80" stroke="#86efac" stroke-width="1"/>
+    <path d="M22 176 L16 182 L20 186 L26 180 Z" fill="#4ade80" stroke="#86efac" stroke-width="1"/>
+
+    <!-- Queue -->
+    <path
+      d="M96 194 C108 202 120 210 132 214 C142 218 152 216 158 208 C162 202 160 194 152 190 C142 184 128 186 116 192 C104 198 94 206 88 214"
+      stroke-width="2.6"
+      fill="none"
+    />
+    <path d="M150 190 C156 184 160 176 158 168" stroke-width="2" opacity="0.8"/>
+    <path d="M142 186 C148 178 150 168 146 160" stroke-width="1.8" opacity="0.7"/>
+    <path d="M134 188 C138 178 138 168 132 160" stroke-width="1.6" opacity="0.65"/>
+  </g>
+</svg>

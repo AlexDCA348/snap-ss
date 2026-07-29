@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 200" fill="none">
+  <defs>
+    <linearGradient id="fp1" x1="60" y1="200" x2="60" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0c1a3a"/>
+      <stop offset="0.2" stop-color="#1e3a8a"/>
+      <stop offset="0.45" stop-color="#2563eb"/>
+      <stop offset="0.7" stop-color="#38bdf8"/>
+      <stop offset="0.9" stop-color="#bae6fd"/>
+      <stop offset="1" stop-color="#f0f9ff"/>
+    </linearGradient>
+    <linearGradient id="fp2" x1="60" y1="200" x2="60" y2="20" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1d4ed8" stop-opacity="0.15"/>
+      <stop offset="0.5" stop-color="#7dd3fc" stop-opacity="0.75"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.95"/>
+    </linearGradient>
+    <radialGradient id="fp3" cx="60" cy="170" r="50" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#e0f2fe"/>
+      <stop offset="0.45" stop-color="#38bdf8" stop-opacity="0.7"/>
+      <stop offset="1" stop-color="#1e40af" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <path
+    d="M60 198 C38 168 22 138 28 102 C18 78 32 52 44 28 C50 14 56 4 60 0 C64 4 70 14 76 28 C88 52 102 78 92 102 C98 138 82 168 60 198 Z"
+    fill="url(#fp1)"
+    opacity="0.92"
+  />
+  <path
+    d="M60 194 C46 168 36 140 40 108 C34 86 44 62 52 38 C56 24 58 12 60 6 C62 12 64 24 68 38 C76 62 86 86 80 108 C84 140 74 168 60 194 Z"
+    fill="url(#fp2)"
+    opacity="0.88"
+  />
+  <ellipse cx="60" cy="172" rx="28" ry="18" fill="url(#fp3)" opacity="0.85"/>
+  <path
+    d="M28 132 C18 108 14 82 22 58 C30 72 26 98 28 132 Z"
+    fill="#3b82f6"
+    opacity="0.45"
+  />
+  <path
+    d="M92 132 C102 108 106 82 98 58 C90 72 94 98 92 132 Z"
+    fill="#3b82f6"
+    opacity="0.45"
+  />
+</svg>
