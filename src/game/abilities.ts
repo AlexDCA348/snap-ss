@@ -151,25 +151,63 @@ const ON_REVEAL: Record<string, OnRevealHandler> = {
     return next;
   },
 
-  /** Moses — si un allié a été détruit cette partie, +N à lui-même. */
-  'moses-buff-if-ally-died': (state, source, lane) => {
-    if (state.graveyard[source.ownerId].length === 0) return state;
-    const def = getCardDef(source.defId);
-    const amount = (def.ability?.params?.amount as number) ?? 2;
-    const next = adjustLanePower(
-      state,
-      lane,
-      source.ownerId,
-      amount,
-      (c) => c.uid === source.uid,
-    );
+  /** Moses — ajoute la carte du dessus du deck ici s'il reste de la place. */
+  'moses-place-top-deck-here': (state, source, lane) => {
+    const side = source.ownerId;
+    const name = getCardDef(source.defId).name;
+    const player = state.players[side];
+
+    if (player.deck.length === 0) {
+      return {
+        ...state,
+        log: [
+          ...state.log,
+          {
+            turn: state.turn,
+            text: `${name} : le deck est vide.`,
+          },
+        ],
+      };
+    }
+
+    if (!canAddRevealedToSide(state, lane, side)) {
+      return {
+        ...state,
+        log: [
+          ...state.log,
+          {
+            turn: state.turn,
+            text: `${name} : plus de place ici.`,
+          },
+        ],
+      };
+    }
+
+    const [top, ...rest] = player.deck;
+    const placed: CardInstance = {
+      ...top,
+      revealed: true,
+      playedTurn: state.turn,
+      silenced: false,
+    };
+    const topName = getCardDef(top.defId).name;
+
+    let next: GameState = {
+      ...state,
+      players: {
+        ...state.players,
+        [side]: { ...player, deck: rest },
+      },
+    };
+    next = appendRevealedToSide(next, lane, side, placed);
+
     return {
       ...next,
       log: [
         ...next.log,
         {
-          turn: next.turn,
-          text: `${def.name} gagne +${amount} (allié détruit).`,
+          turn: state.turn,
+          text: `${name} ajoute ${topName} depuis le deck ici.`,
         },
       ],
     };

@@ -457,15 +457,14 @@ export const CARDS: CardDefinition[] = [
   {
     id: 'moses',
     name: 'Moses de la Baleine',
-    cost: 3,
-    power: 3,
+    cost: 4,
+    power: 1,
     faction: 'silver',
     flavor: 'Le poids des marées.',
     ability: {
       kind: 'on-reveal',
-      id: 'moses-buff-if-ally-died',
-      text: 'Au révélé : si un allié a été détruit, +2 à Moses.',
-      params: { amount: 2 },
+      id: 'moses-place-top-deck-here',
+      text: 'Au révélé : ajoute la carte du dessus de votre deck ici (s\u2019il reste de la place).',
     },
   },
   {
