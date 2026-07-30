@@ -3,6 +3,11 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { getBuildableCardDefs } from '../game/buildableCards';
 import { defToPreviewInstance } from '../game/cardPreview';
 import { DECK_SIZE } from '../game/deckPool';
+import {
+  buildPresetDeck,
+  DECK_PRESETS,
+  type DeckPreset,
+} from '../game/deckPresets';
 import type { Faction } from '../game/types';
 import { useMiniPhone } from '../hooks/useMiniPhone';
 import { useAppStore } from '../store/appStore';
@@ -53,6 +58,8 @@ export function InfinityDeckScreen() {
 
   const [cardIds, setCardIds] = useState<string[]>([]);
   const [libraryOpen, setLibraryOpen] = useState(false);
+  const [presetsOpen, setPresetsOpen] = useState(false);
+  const [confirmPresetId, setConfirmPresetId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [faction, setFaction] = useState<Faction | 'all'>('all');
   const [pickedDefId, setPickedDefId] = useState<string | null>(null);
@@ -95,10 +102,33 @@ export function InfinityDeckScreen() {
   };
 
   const fillRandom = () => {
+    // Infinity a accès à tout le pool buildable (pas de filtre collection).
     const pool = getBuildableCardDefs().map((c) => c.id);
     const shuffled = [...pool].sort(() => Math.random() - 0.5);
     setCardIds(shuffled.slice(0, DECK_SIZE));
     showToast('Deck Infinity aléatoire généré.');
+  };
+
+  const clearDeck = () => {
+    setCardIds([]);
+    showToast('Deck vidé.');
+  };
+
+  const applyPreset = (preset: DeckPreset) => {
+    if (confirmPresetId !== preset.id) {
+      setConfirmPresetId(preset.id);
+      return;
+    }
+    const ids = buildPresetDeck(preset.id);
+    if (ids.length !== DECK_SIZE) {
+      showToast('Impossible de générer ce preset.');
+      setConfirmPresetId(null);
+      return;
+    }
+    setCardIds(ids);
+    setConfirmPresetId(null);
+    setPresetsOpen(false);
+    showToast(`Deck « ${preset.name} » généré.`);
   };
 
   const launch = () => {
@@ -109,6 +139,9 @@ export function InfinityDeckScreen() {
     newInfinityGame(cardIds);
     goToGame();
   };
+
+  const btnBase =
+    'inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg ring-1 text-[9px] uppercase tracking-wide transition shrink-0';
 
   return (
     <div className="infinity-deck fixed inset-0 flex flex-col bg-gradient-to-b from-shadow-900 via-[#0b1a2e] to-shadow-950">
@@ -121,7 +154,7 @@ export function InfinityDeckScreen() {
         ].join(' ')}
       >
         <div className="flex items-end justify-between gap-3">
-          <div>
+          <div className="min-w-0">
             <h1 className="display-font text-base sm:text-lg text-cyan-300 tracking-[0.18em] uppercase">
               Infinity
             </h1>
@@ -129,13 +162,107 @@ export function InfinityDeckScreen() {
               Deck éphémère · toutes les cartes · sans récompense
             </p>
           </div>
+        </div>
+
+        <div className="relative mt-3 flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+          <button
+            type="button"
+            onClick={() => {
+              setPresetsOpen((v) => !v);
+              setConfirmPresetId(null);
+            }}
+            className={[
+              btnBase,
+              presetsOpen
+                ? 'bg-cyan-500/25 ring-cyan-400/50 text-cyan-100'
+                : 'bg-white/5 ring-white/12 text-cosmos-200 hover:bg-white/10',
+            ].join(' ')}
+            aria-label="Synergies"
+            title="Presets de synergie"
+          >
+            <span className="text-[11px] leading-none" aria-hidden>
+              ▲
+            </span>
+            <span>Synergies</span>
+          </button>
+
           <button
             type="button"
             onClick={fillRandom}
-            className="text-[10px] uppercase tracking-wider px-3 py-1.5 rounded-full ring-1 ring-cyan-400/40 bg-cyan-500/15 text-cyan-100 hover:bg-cyan-500/25 transition"
+            className={`${btnBase} bg-white/5 ring-white/12 text-cosmos-200 hover:bg-white/10`}
+            aria-label="Remplir au hasard"
+            title="Remplir au hasard"
           >
-            Aléatoire
+            <span className="text-[11px] leading-none font-bold" aria-hidden>
+              ■
+            </span>
+            <span>Aléatoire</span>
           </button>
+
+          <button
+            type="button"
+            onClick={clearDeck}
+            className={`${btnBase} bg-rose-500/10 ring-rose-400/25 text-rose-200/90 hover:bg-rose-500/15`}
+            aria-label="Vider le deck"
+            title="Vider le deck"
+          >
+            <span className="text-[11px] leading-none" aria-hidden>
+              ×
+            </span>
+            <span>Vider</span>
+          </button>
+
+          {presetsOpen ? (
+            <>
+              <button
+                type="button"
+                aria-label="Fermer synergies"
+                className="fixed inset-0 z-40 cursor-default bg-black/80"
+                onClick={() => {
+                  setPresetsOpen(false);
+                  setConfirmPresetId(null);
+                }}
+              />
+              <div className="absolute left-0 right-0 top-full mt-1 z-50 max-h-[min(50vh,360px)] overflow-y-auto rounded-xl border border-white/15 bg-[#071018] shadow-2xl p-2.5 space-y-1">
+                <p className="text-[9px] uppercase tracking-widest text-ui-muted px-1">
+                  Presets de synergie
+                </p>
+                <p className="text-[9px] text-ui-muted px-1 pb-0.5">
+                  Touchez deux fois pour confirmer.
+                </p>
+                {DECK_PRESETS.map((preset) => {
+                  const pending = confirmPresetId === preset.id;
+                  return (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => applyPreset(preset)}
+                      className={[
+                        'w-full text-left rounded-lg px-2.5 py-2 transition ring-1',
+                        pending
+                          ? 'bg-cyan-500/20 ring-cyan-400/50'
+                          : 'bg-white/[0.03] ring-white/5 hover:bg-white/[0.07]',
+                      ].join(' ')}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="text-xs font-medium text-cosmos-100">
+                          {preset.name}
+                        </span>
+                        {pending ? (
+                          <span className="text-[9px] text-cyan-200 shrink-0">
+                            Confirmer →
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="text-[10px] text-ui-muted mt-0.5 leading-snug">
+                        {preset.description}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          ) : null}
         </div>
       </header>
 
