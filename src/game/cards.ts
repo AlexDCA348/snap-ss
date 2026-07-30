@@ -690,9 +690,8 @@ export const CARDS: CardDefinition[] = [
     flavor: 'Excalibur.',
     ability: {
       kind: 'on-reveal',
-      id: 'shura-destroy-power-ge10',
-      text: 'Au révélé : détruit les cartes ennemies de puissance ≥ 6 sur ce lieu.',
-      params: { minPower: 6 },
+      id: 'shura-reveal-and-destroy',
+      text: 'Révélée : ajoute une carte du deck adverse de son côté ici. Détruit-la si sa puissance est inférieure.',
     },
   },
   // (mis de côté) Shion du Bélier

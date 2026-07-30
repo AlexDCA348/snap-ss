@@ -526,30 +526,80 @@ const ON_REVEAL: Record<string, OnRevealHandler> = {
     };
   },
 
-  /** Shura — détruit les cartes ennemies ≥ N pwr sur CE LIEU (ignore la protection). */
-  'shura-destroy-power-ge10': (state, source, lane) => {
-    const def = getCardDef(source.defId);
-    const minPower = (def.ability?.params?.minPower as number) ?? 6;
+  /** Shura — ajoute une carte du deck adverse de son côté ici, la détruit si puissance inférieure. */
+  'shura-reveal-and-destroy': (state, source, lane) => {
     const enemy = otherPlayer(source.ownerId);
-    const result = destroyAtLaneForced(
-      state,
-      lane,
-      enemy,
-      (c) => currentPower(state, c) >= minPower,
-      source,
-    );
-    if (result.destroyed.length === 0) return state;
+    const enemyPlayer = state.players[enemy];
+    if (enemyPlayer.deck.length === 0) return state;
+
+    const [drawn, ...restDeck] = enemyPlayer.deck;
     const name = getCardDef(source.defId).name;
-    return {
-      ...result.state,
+    const drawnDef = getCardDef(drawn.defId);
+
+    if (!canAddRevealedToSide(state, lane, enemy)) {
+      return {
+        ...state,
+        log: [
+          ...state.log,
+          {
+            turn: state.turn,
+            text: `${name} : le côté adverse est plein, impossible d'ajouter une carte.`,
+          },
+        ],
+      };
+    }
+
+    const placed: CardInstance = {
+      ...drawn,
+      revealed: true,
+      playedTurn: state.turn,
+      silenced: false,
+    };
+
+    let next: GameState = {
+      ...state,
+      players: {
+        ...state.players,
+        [enemy]: { ...enemyPlayer, deck: restDeck },
+      },
+    };
+    next = appendRevealedToSide(next, lane, enemy, placed);
+
+    const shuraPower = currentPower(next, source);
+    const drawnPower = currentPower(next, placed);
+
+    next = {
+      ...next,
       log: [
-        ...result.state.log,
+        ...next.log,
         {
           turn: state.turn,
-          text: `${name} tranche ${result.destroyed.length} carte(s) ennemie(s) ici (puissance ≥ ${minPower}).`,
+          text: `${name} révèle ${drawnDef.name} (${drawnPower}) du deck adverse.`,
         },
       ],
     };
+
+    if (drawnPower < shuraPower) {
+      const result = destroyAtLaneForced(
+        next,
+        lane,
+        enemy,
+        (c) => c.uid === placed.uid,
+        source,
+      );
+      return {
+        ...result.state,
+        log: [
+          ...result.state.log,
+          {
+            turn: state.turn,
+            text: `${drawnDef.name} (${drawnPower}) est inférieur à ${name} (${shuraPower}) — détruit !`,
+          },
+        ],
+      };
+    }
+
+    return next;
   },
 
   'debuff-strongest-enemy-here': (state, source, lane) => {
