@@ -18,7 +18,7 @@ import type { LocationIndex } from '../game/types';
 import { useMiniPhone } from '../hooks/useMiniPhone';
 import { useLockPageScroll } from '../hooks/useLockPageScroll';
 import { canPlay } from '../game/engine';
-import { getHandDeckCostReduction } from '../game/abilities';
+import { getEffectiveHandCost } from '../game/abilities';
 import { useAppStore } from '../store/appStore';
 import { useCollectionStore } from '../store/collectionStore';
 import { useGame } from '../store/gameStore';
@@ -68,7 +68,6 @@ export function GameScreen() {
   selectedCardRef.current = selectedCard;
 
   const player = state.players.player;
-  const costReduction = getHandDeckCostReduction(state, 'player');
 
   const handleMenu = () => {
     goToMenu();
@@ -95,7 +94,7 @@ export function GameScreen() {
     const def = getCardDef(card.defId);
     setSelectedCard({
       uid,
-      cost: Math.max(0, def.cost - costReduction),
+      cost: getEffectiveHandCost(state, 'player', def.cost),
     });
   };
 

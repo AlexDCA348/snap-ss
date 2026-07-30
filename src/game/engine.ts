@@ -14,7 +14,7 @@ import {
   applyJamianEndOfReveal,
   applyTicks,
   computeOngoing,
-  getHandDeckCostReduction,
+  getEffectiveHandCost,
   isIndestructible,
 } from './abilities';
 import { scoringPower } from './sagaIllusion';
@@ -207,8 +207,7 @@ export function canPlay(
   const card = p.hand.find((c) => c.uid === uid);
   if (!card) return { ok: false, reason: 'Carte introuvable.' };
   const def = getCardDef(card.defId);
-  const reduction = getHandDeckCostReduction(state, playerId);
-  const effectiveCost = Math.max(0, def.cost - reduction);
+  const effectiveCost = getEffectiveHandCost(state, playerId, def.cost);
   if (effectiveCost > p.cosmos)
     return { ok: false, reason: 'Cosmos insuffisant.' };
   if (!canPlaceCardOnSide(state, lane, playerId))
@@ -239,8 +238,7 @@ export function playCard(
   const p = state.players[playerId];
   const card = p.hand.find((c) => c.uid === uid)!;
   const def = getCardDef(card.defId);
-  const reduction = getHandDeckCostReduction(state, playerId);
-  const effectiveCost = Math.max(0, def.cost - reduction);
+  const effectiveCost = getEffectiveHandCost(state, playerId, def.cost);
   const newHand = p.hand.filter((c) => c.uid !== uid);
   const newPending: Record<LocationIndex, CardInstance[]> = {
     0: p.pending[0].slice(),
@@ -283,8 +281,7 @@ export function unplayCard(
   if (foundLane === null || !foundCard) return state;
   if (isIndestructible(state, foundCard, foundLane)) return state;
   const def = getCardDef(foundCard.defId);
-  const reduction = getHandDeckCostReduction(state, playerId);
-  const effectiveCost = Math.max(0, def.cost - reduction);
+  const effectiveCost = getEffectiveHandCost(state, playerId, def.cost);
   const newPending: Record<LocationIndex, CardInstance[]> = {
     0: p.pending[0].slice(),
     1: p.pending[1].slice(),

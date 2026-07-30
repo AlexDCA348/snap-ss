@@ -20,7 +20,7 @@ export function isMiloCard(defId: string): boolean {
   return defId === MILO_DEF_ID;
 }
 
-/** Impacts rouges au révélé de Milo (−2 à tous les ennemis ici). */
+/** Impacts rouges — ancien au révélé de Milo (conservé si réutilisé). */
 export function collectMiloRevealImpacts(
   preReveal: GameState,
   post: GameState,

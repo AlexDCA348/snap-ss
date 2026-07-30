@@ -368,15 +368,15 @@ export const CARDS: CardDefinition[] = [
   {
     id: 'milo',
     name: 'Milo du Scorpion',
-    cost: 5,
-    power: 8,
+    cost: 4,
+    power: 5,
     faction: 'gold',
     flavor: 'Aiguille Écarlate.',
     ability: {
-      kind: 'on-reveal',
-      id: 'debuff-all-enemies-2',
-      text: 'Au révélé : −2 permanent à toutes les cartes adverses ici.',
-      params: { amount: 2 },
+      kind: 'ongoing',
+      id: 'ongoing-increase-enemy-hand-cost',
+      text: 'Continu : les cartes dans la main de l\u2019adversaire coûtent toutes +1.',
+      params: { amount: 1 },
     },
   },
   {

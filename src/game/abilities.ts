@@ -1037,6 +1037,7 @@ const ONGOING: Record<string, OngoingHandler> = {
   'ongoing-tick-buff-self': () => ({}),
   'ongoing-tick-june-cosmos': () => ({}),
   'ongoing-reduce-cost-hand-deck': () => ({}),
+  'ongoing-increase-enemy-hand-cost': () => ({}),
   'ongoing-tick-summon-double-once': () => ({}),
 };
 
@@ -1247,6 +1248,46 @@ export function getHandDeckCostReduction(state: GameState, ownerId: PlayerId): n
     }
   }
   return total;
+}
+
+/**
+ * Surcoût imposé à la main de `victimId` par les effets continus adverses
+ * (ex. Milo : +1 à toutes les cartes en main).
+ */
+export function getEnemyHandCostIncrease(
+  state: GameState,
+  victimId: PlayerId,
+): number {
+  const enemy = otherPlayer(victimId);
+  const silencedLanes = new Set<LocationIndex>();
+  for (const l of [0, 1, 2] as LocationIndex[]) {
+    if (isLaneSilenced(state, l)) silencedLanes.add(l);
+  }
+
+  let total = 0;
+  for (const l of [0, 1, 2] as LocationIndex[]) {
+    if (silencedLanes.has(l)) continue;
+    for (const c of state.lanes[l].cards[enemy]) {
+      if (c.silenced) continue;
+      const def = getCardDef(c.defId);
+      if (def.ability?.id !== 'ongoing-increase-enemy-hand-cost') continue;
+      let amount = (def.ability.params?.amount as number) ?? 1;
+      if (isSanctuaryLane(state, l, silencedLanes)) amount *= 2;
+      total += amount;
+    }
+  }
+  return total;
+}
+
+/** Coût effectif pour jouer une carte depuis la main. */
+export function getEffectiveHandCost(
+  state: GameState,
+  ownerId: PlayerId,
+  baseCost: number,
+): number {
+  const reduction = getHandDeckCostReduction(state, ownerId);
+  const increase = getEnemyHandCostIncrease(state, ownerId);
+  return Math.max(0, baseCost - reduction + increase);
 }
 
 // ---------------------------------------------------------------------------
