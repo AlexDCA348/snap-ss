@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --base /",
     "dev:mobile": "vite --base / --host",
-    "deploy": "npm run build && node scripts/deploy-ftp.mjs",
+    "deploy": "npm run build && ./scripts/deploy-curl.sh",
     "build": "tsc -b && vite build",
     "build:preview": "vite build --base /snap-ss/preview/ --outDir preview",
     "fetch-art": "node scripts/fetch-card-art.mjs",
