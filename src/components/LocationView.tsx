@@ -406,6 +406,7 @@ function LaneCardZone({
   onUnplay?: (uid: string) => void;
 }) {
   const andromedaBursts = useGame((s) => s.andromedaRelocateBursts);
+  const shuraSummonBursts = useGame((s) => s.shuraSummonBursts);
   const dims = CARD_DIMENSIONS[cardSize];
   const occupied = [...revealed, ...pending];
   const slots = Array.from({ length: LANE_CAPACITY }, (_, i) => occupied[i] ?? null);
@@ -435,6 +436,15 @@ function LaneCardZone({
           andromedaBursts.some(
             (b) => b.sourceUid === card.uid && b.sourceLane === laneIndex,
           );
+        const isShuraSummoning =
+          card !== null &&
+          isRevealed &&
+          shuraSummonBursts.some(
+            (b) =>
+              b.targetUid === card.uid &&
+              b.lane === laneIndex &&
+              b.targetSide === side,
+          );
 
         return (
           <div
@@ -457,7 +467,9 @@ function LaneCardZone({
                 <div
                   className={[
                     'transition-opacity duration-150',
-                    isRelocating ? 'opacity-0 pointer-events-none' : 'opacity-100',
+                    isRelocating || isShuraSummoning
+                      ? 'opacity-0 pointer-events-none'
+                      : 'opacity-100',
                   ].join(' ')}
                 >
                   <CardSlot

@@ -40,6 +40,8 @@ export interface RevealFrame {
   uid: string;
   /** Carte sur l'Île d'Andromède après au révélé, avant le déplacement. */
   andromedaRelocatePreview?: boolean;
+  /** Shura : invocation en vol (carte tirée encore masquée sur le lieu). */
+  shuraSummonPreview?: boolean;
   /** Shura : carte adverse placée, destruction Excalibur à venir. */
   shuraDestroyPreview?: boolean;
 }
@@ -187,33 +189,52 @@ export function buildRevealTimeline(
             continue;
           }
 
-          const { afterPlace, final, destroyedUid } =
+          const { afterPlace, afterEffect, final, destroyedUid, placedUid } =
             resolveShuraRevealThenDestroy(stateBeforeEffect, onLane, lane);
 
-          // 1) La carte adverse apparaît d'abord.
+          // 1) Shura se révèle.
           frames.push({
-            state: afterPlace,
+            state: stateBeforeEffect,
             side: pid,
             lane,
             uid: pending.uid,
           });
 
-          if (destroyedUid) {
-            // 2) Carte encore visible + VFX Excalibur.
+          if (placedUid) {
+            // 2) La carte adverse vole depuis la main / deck vers le lieu.
             frames.push({
               state: afterPlace,
               side: pid,
               lane,
               uid: pending.uid,
-              shuraDestroyPreview: true,
+              shuraSummonPreview: true,
             });
-            // 3) Destruction résolue.
+
+            // 3) La carte invoquée se révèle et joue son effet.
             frames.push({
-              state: final,
+              state: afterEffect,
               side: pid,
               lane,
               uid: pending.uid,
             });
+
+            if (destroyedUid) {
+              // 4) Excalibur (carte encore visible).
+              frames.push({
+                state: afterEffect,
+                side: pid,
+                lane,
+                uid: pending.uid,
+                shuraDestroyPreview: true,
+              });
+              // 5) Destruction résolue.
+              frames.push({
+                state: final,
+                side: pid,
+                lane,
+                uid: pending.uid,
+              });
+            }
           }
 
           s = final;

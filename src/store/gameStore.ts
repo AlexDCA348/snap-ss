@@ -53,6 +53,11 @@ import {
   type ShuraBladeBurst,
 } from '../game/shuraBlade';
 import {
+  collectShuraSummonBursts,
+  SHURA_SUMMON_MS,
+  type ShuraSummonBurst,
+} from '../game/shuraSummon';
+import {
   collectDeathmaskRevealSouls,
   DEATHMASK_SOULS_MS,
   type DeathmaskSoulBurst,
@@ -123,6 +128,8 @@ interface GameStore {
   shiryuDragonBursts: ShiryuDragonBurst[];
   /** Lames Shura — révélé uniquement. */
   shuraBladeBursts: ShuraBladeBurst[];
+  /** Invocation Shura — vol de la carte tirée. */
+  shuraSummonBursts: ShuraSummonBurst[];
   /** Fantômes DeathMask — révélé uniquement. */
   deathmaskSoulBursts: DeathmaskSoulBurst[];
   /** Aldébaran — atterrissage lourd au révélé. */
@@ -167,6 +174,7 @@ export const useGame = create<GameStore>((set, get) => ({
   jamianCrowBursts: [],
   shiryuDragonBursts: [],
   shuraBladeBursts: [],
+  shuraSummonBursts: [],
   deathmaskSoulBursts: [],
   aldebaranImpactBursts: [],
   ichiClawBursts: [],
@@ -199,6 +207,7 @@ export const useGame = create<GameStore>((set, get) => ({
       jamianCrowBursts: [],
       shiryuDragonBursts: [],
       shuraBladeBursts: [],
+      shuraSummonBursts: [],
       deathmaskSoulBursts: [],
       aldebaranImpactBursts: [],
       ichiClawBursts: [],
@@ -227,6 +236,7 @@ export const useGame = create<GameStore>((set, get) => ({
       jamianCrowBursts: [],
       shiryuDragonBursts: [],
       shuraBladeBursts: [],
+      shuraSummonBursts: [],
       deathmaskSoulBursts: [],
       aldebaranImpactBursts: [],
       ichiClawBursts: [],
@@ -263,6 +273,7 @@ export const useGame = create<GameStore>((set, get) => ({
       jamianCrowBursts: [],
       shiryuDragonBursts: [],
       shuraBladeBursts: [],
+      shuraSummonBursts: [],
       deathmaskSoulBursts: [],
       aldebaranImpactBursts: [],
       ichiClawBursts: [],
@@ -288,6 +299,7 @@ export const useGame = create<GameStore>((set, get) => ({
       const jamianBursts = collectJamianEndOfRevealCrows(beforeJamian, afterReveal);
       const shiryuBursts = collectShiryuDeathBursts(afterAi, afterReveal);
       const shuraBursts = collectShuraRevealBlades(afterAi, afterReveal);
+      const shuraSummonBursts = collectShuraSummonBursts(afterAi, afterReveal);
       const deathmaskBursts = collectDeathmaskRevealSouls(afterAi, afterReveal);
       const aldebaranBursts = collectAldebaranRevealImpacts(afterAi, afterReveal);
       const ichiBursts = collectIchiRevealClaws(afterAi, afterReveal);
@@ -322,6 +334,9 @@ export const useGame = create<GameStore>((set, get) => ({
               (b) => b.sourceUid !== sourceUid,
             ),
             shuraBladeBursts: prev.shuraBladeBursts.filter(
+              (b) => b.sourceUid !== sourceUid,
+            ),
+            shuraSummonBursts: prev.shuraSummonBursts.filter(
               (b) => b.sourceUid !== sourceUid,
             ),
             deathmaskSoulBursts: prev.deathmaskSoulBursts.filter(
@@ -374,6 +389,9 @@ export const useGame = create<GameStore>((set, get) => ({
         const stepShura = frame.shuraDestroyPreview
           ? shuraBursts.filter((b) => b.sourceUid === frame.uid)
           : [];
+        const stepShuraSummon = frame.shuraSummonPreview
+          ? shuraSummonBursts.filter((b) => b.sourceUid === frame.uid)
+          : [];
         const stepDeathmask = deathmaskBursts.filter((b) => b.sourceUid === frame.uid);
         const stepAldebaran = aldebaranBursts.filter((b) => b.sourceUid === frame.uid);
         const stepIchi = ichiBursts.filter((b) => b.sourceUid === frame.uid);
@@ -413,6 +431,9 @@ export const useGame = create<GameStore>((set, get) => ({
             aiolosArrowBursts: [...prev.aiolosArrowBursts, ...stepAiolos],
             ikkiPhoenixBursts: [...prev.ikkiPhoenixBursts, ...stepIkki],
             shuraBladeBursts: [...prev.shuraBladeBursts, ...stepShura],
+            shuraSummonBursts: frame.shuraSummonPreview
+              ? [...prev.shuraSummonBursts, ...stepShuraSummon]
+              : prev.shuraSummonBursts.filter((b) => b.sourceUid !== frame.uid),
             deathmaskSoulBursts: [...prev.deathmaskSoulBursts, ...stepDeathmask],
             aldebaranImpactBursts: [...prev.aldebaranImpactBursts, ...stepAldebaran],
             ichiClawBursts: [...prev.ichiClawBursts, ...stepIchi],
@@ -433,6 +454,7 @@ export const useGame = create<GameStore>((set, get) => ({
           if (stepAiolos.length) clearBurst(frame.uid, AIOLOS_ARROW_MS);
           if (stepIkki.length) clearBurst(frame.uid, IKKI_PHOENIX_MS);
           if (stepShura.length) clearBurst(frame.uid, SHURA_BLADE_MS);
+          if (stepShuraSummon.length) clearBurst(frame.uid, SHURA_SUMMON_MS);
           if (stepDeathmask.length) clearBurst(frame.uid, DEATHMASK_SOULS_MS);
           if (stepAldebaran.length) clearBurst(frame.uid, ALDEBARAN_IMPACT_MS);
           if (stepIchi.length) {
@@ -452,6 +474,9 @@ export const useGame = create<GameStore>((set, get) => ({
         elapsed += REVEAL_STEP_MS;
         if (frame.andromedaRelocatePreview) {
           elapsed += ANDROMEDA_RELOCATE_MS;
+        }
+        if (frame.shuraSummonPreview) {
+          elapsed += SHURA_SUMMON_MS;
         }
         if (frame.shuraDestroyPreview) {
           elapsed += SHURA_BLADE_MS;

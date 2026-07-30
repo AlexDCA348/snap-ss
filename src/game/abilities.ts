@@ -1526,21 +1526,100 @@ function otherPlayer(id: PlayerId): PlayerId {
 }
 
 export interface ShuraRevealResolve {
-  /** État après placement de la carte adverse (avant destruction éventuelle). */
+  /** État après placement de la carte tirée (avant son au révélé). */
   afterPlace: GameState;
+  /** État après l'effet au révélé de la carte tirée. */
+  afterEffect: GameState;
   /** État final après destruction conditionnelle. */
   final: GameState;
   placedUid: string | null;
   destroyedUid: string | null;
-  /** Index de slot de la carte placée côté adverse (pour le VFX). */
+  /** Index de slot au moment du placement (vol d'invocation). */
+  summonSlotIndex: number;
+  /** Côté où la carte est invoquée (deck adverse). */
+  summonSide: PlayerId;
+  /** Index de slot au moment de la destruction (peut différer si l'effet déplace). */
   slotIndex: number;
+  /** Côté où la carte se trouve pour la destruction. */
   enemySide: PlayerId;
+  placedDefId: string | null;
+}
+
+const GALACTIC_TOURNAMENT_ID = 'loc-galactic-tournament-double-on-reveal';
+
+function findCardOnLane(
+  state: GameState,
+  lane: LocationIndex,
+  uid: string,
+): { card: CardInstance; side: PlayerId } | null {
+  for (const side of ['player', 'ai'] as PlayerId[]) {
+    const card = state.lanes[lane].cards[side].find((c) => c.uid === uid);
+    if (card) return { card, side };
+  }
+  return null;
+}
+
+function applyPulledCardOnReveal(
+  state: GameState,
+  lane: LocationIndex,
+  uid: string,
+): GameState {
+  if (isOnRevealDisabled(state, lane)) {
+    const found = findCardOnLane(state, lane, uid);
+    if (found && getCardDef(found.card.defId).ability?.kind === 'on-reveal') {
+      return {
+        ...state,
+        log: [
+          ...state.log,
+          {
+            turn: state.turn,
+            text: `Un sceau empêche l’effet Au révélé à ${state.locations[lane].name}.`,
+          },
+        ],
+      };
+    }
+    return state;
+  }
+
+  let s = state;
+  const first = findCardOnLane(s, lane, uid);
+  if (!first) return s;
+  if (getCardDef(first.card.defId).ability?.kind !== 'on-reveal') return s;
+
+  const runPass = () => {
+    const found = findCardOnLane(s, lane, uid);
+    if (!found) return;
+    s = applyOnReveal(s, found.card, lane);
+  };
+
+  runPass();
+
+  if (s.locations[lane]?.effect?.id === GALACTIC_TOURNAMENT_ID) {
+    const still = findCardOnLane(s, lane, uid);
+    if (still && getCardDef(still.card.defId).ability?.kind === 'on-reveal') {
+      runPass();
+      const def = getCardDef(first.card.defId);
+      s = {
+        ...s,
+        log: [
+          ...s.log,
+          {
+            turn: s.turn,
+            text: `${s.locations[lane].name} : au révélé de ${def.name} une seconde fois.`,
+          },
+        ],
+      };
+    }
+  }
+
+  return s;
 }
 
 /**
  * Shura — tire une carte du deck adverse, la place de son côté ici,
- * puis la détruit seulement si sa puissance est inférieure à celle de Shura
- * et qu'elle n'est pas indestructible.
+ * laisse jouer son effet Au révélé, puis la détruit seulement si sa
+ * puissance (après effet) est inférieure à celle de Shura et qu'elle
+ * n'est pas indestructible.
  */
 export function resolveShuraRevealThenDestroy(
   state: GameState,
@@ -1550,11 +1629,15 @@ export function resolveShuraRevealThenDestroy(
   const enemy = otherPlayer(source.ownerId);
   const empty: ShuraRevealResolve = {
     afterPlace: state,
+    afterEffect: state,
     final: state,
     placedUid: null,
     destroyedUid: null,
+    summonSlotIndex: -1,
+    summonSide: enemy,
     slotIndex: -1,
     enemySide: enemy,
+    placedDefId: null,
   };
 
   const enemyPlayer = state.players[enemy];
@@ -1578,6 +1661,7 @@ export function resolveShuraRevealThenDestroy(
     return {
       ...empty,
       afterPlace: blocked,
+      afterEffect: blocked,
       final: blocked,
     };
   }
@@ -1598,11 +1682,11 @@ export function resolveShuraRevealThenDestroy(
   };
   afterPlace = appendRevealedToSide(afterPlace, lane, enemy, placed);
 
-  const shuraPower = currentPower(afterPlace, source);
-  const drawnPower = currentPower(afterPlace, placed);
   const slotIndex = afterPlace.lanes[lane].cards[enemy].findIndex(
     (c) => c.uid === placed.uid,
   );
+  const summonSlotIndex = slotIndex;
+  const summonSide = enemy;
 
   afterPlace = {
     ...afterPlace,
@@ -1610,27 +1694,64 @@ export function resolveShuraRevealThenDestroy(
       ...afterPlace.log,
       {
         turn: state.turn,
-        text: `${name} révèle ${drawnDef.name} (${drawnPower}) du deck adverse.`,
+        text: `${name} invoque ${drawnDef.name} du deck adverse ici.`,
       },
     ],
   };
 
-  if (!(drawnPower < shuraPower)) {
+  const afterEffect = applyPulledCardOnReveal(
+    afterPlace,
+    lane,
+    placed.uid,
+  );
+
+  const located = findCardOnLane(afterEffect, lane, placed.uid);
+  if (!located) {
+    // La carte a quitté le lieu via son effet — pas de destruction.
     return {
       afterPlace,
-      final: afterPlace,
+      afterEffect,
+      final: afterEffect,
       placedUid: placed.uid,
       destroyedUid: null,
+      summonSlotIndex,
+      summonSide,
       slotIndex,
       enemySide: enemy,
+      placedDefId: placed.defId,
     };
   }
 
-  if (isIndestructible(afterPlace, placed, lane)) {
+  const effectSlotIndex = afterEffect.lanes[lane].cards[located.side].findIndex(
+    (c) => c.uid === placed.uid,
+  );
+  const vfxSlot = effectSlotIndex >= 0 ? effectSlotIndex : slotIndex;
+
+  const shuraOnLane = findCardOnLane(afterEffect, lane, source.uid);
+  const shuraCard = shuraOnLane?.card ?? source;
+  const shuraPower = currentPower(afterEffect, shuraCard);
+  const drawnPower = currentPower(afterEffect, located.card);
+
+  if (!(drawnPower < shuraPower)) {
+    return {
+      afterPlace,
+      afterEffect,
+      final: afterEffect,
+      placedUid: placed.uid,
+      destroyedUid: null,
+      summonSlotIndex,
+      summonSide,
+      slotIndex: vfxSlot,
+      enemySide: located.side,
+      placedDefId: placed.defId,
+    };
+  }
+
+  if (isIndestructible(afterEffect, located.card, lane)) {
     const resisted: GameState = {
-      ...afterPlace,
+      ...afterEffect,
       log: [
-        ...afterPlace.log,
+        ...afterEffect.log,
         {
           turn: state.turn,
           text: `${drawnDef.name} résiste à ${name} !`,
@@ -1638,19 +1759,23 @@ export function resolveShuraRevealThenDestroy(
       ],
     };
     return {
-      afterPlace: resisted,
+      afterPlace,
+      afterEffect: resisted,
       final: resisted,
       placedUid: placed.uid,
       destroyedUid: null,
-      slotIndex,
-      enemySide: enemy,
+      summonSlotIndex,
+      summonSide,
+      slotIndex: vfxSlot,
+      enemySide: located.side,
+      placedDefId: placed.defId,
     };
   }
 
   const result = destroyAtLaneForced(
-    afterPlace,
+    afterEffect,
     lane,
-    enemy,
+    located.side,
     (c) => c.uid === placed.uid,
     source,
   );
@@ -1670,11 +1795,15 @@ export function resolveShuraRevealThenDestroy(
 
   return {
     afterPlace,
+    afterEffect,
     final,
     placedUid: placed.uid,
     destroyedUid: destroyed ? placed.uid : null,
-    slotIndex,
-    enemySide: enemy,
+    summonSlotIndex,
+    summonSide,
+    slotIndex: vfxSlot,
+    enemySide: located.side,
+    placedDefId: placed.defId,
   };
 }
 

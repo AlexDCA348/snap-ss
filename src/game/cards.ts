@@ -691,7 +691,7 @@ export const CARDS: CardDefinition[] = [
     ability: {
       kind: 'on-reveal',
       id: 'shura-reveal-and-destroy',
-      text: 'Révélée : ajoute une carte du deck adverse de son côté ici. Détruit-la si sa puissance est inférieure.',
+      text: 'Au révélé : invoque une carte du deck adverse de son côté ici ; elle se révèle et joue son effet. Détruit-la ensuite si sa puissance est inférieure et qu\u2019elle n\u2019est pas indestructible.',
     },
   },
   // (mis de côté) Shion du Bélier

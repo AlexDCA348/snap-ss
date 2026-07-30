@@ -9,6 +9,7 @@ import { Hud } from '../components/Hud';
 import { DeathmaskSoulsOverlay } from '../components/DeathmaskSoulsOverlay';
 import { SagaDuplicateOverlay } from '../components/SagaDuplicateOverlay';
 import { AndromedaRelocateOverlay } from '../components/AndromedaRelocateOverlay';
+import { ShuraSummonOverlay } from '../components/ShuraSummonOverlay';
 import { DanteChainOverlay } from '../components/DanteChainOverlay';
 import { ShiryuDragonCometOverlay } from '../components/ShiryuDragonCometOverlay';
 import { IkkiPhoenixOverlay } from '../components/IkkiPhoenixOverlay';
@@ -41,6 +42,7 @@ export function GameScreen() {
   const deathmaskSoulBursts = useGame((s) => s.deathmaskSoulBursts);
   const sagaDuplicateBursts = useGame((s) => s.sagaDuplicateBursts);
   const andromedaRelocateBursts = useGame((s) => s.andromedaRelocateBursts);
+  const shuraSummonBursts = useGame((s) => s.shuraSummonBursts);
   const danteChainBursts = useGame((s) => s.danteChainBursts);
   const shiryuDragonBursts = useGame((s) => s.shiryuDragonBursts);
   const matchSerial = useGame((s) => s.matchSerial);
@@ -225,6 +227,7 @@ export function GameScreen() {
         bursts={andromedaRelocateBursts}
         compact={compact}
       />
+      <ShuraSummonOverlay bursts={shuraSummonBursts} compact={compact} />
       <DanteChainOverlay bursts={danteChainBursts} compact={compact} />
       <ShiryuDragonCometOverlay bursts={shiryuDragonBursts} compact={compact} />
       <VictoryRewardModal
