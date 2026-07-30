@@ -10,7 +10,7 @@ import { CampaignProgressSlider } from '../components/menu/CampaignProgressSlide
 import { MainMenuBackground } from '../components/menu/MainMenuBackground';
 import { NavButton } from '../components/menu/NavButton';
 
-const MENU_LOGO_URL = `${import.meta.env.BASE_URL}menu/logo-saint-seiya-snap.png`;
+const MENU_LOGO_URL = `${import.meta.env.BASE_URL}menu/logo-saint-seiya-snap.png?v=${encodeURIComponent(__BUILD_STAMP__)}`;
 const MENU_VERSION_LABEL = `v${__APP_VERSION__} · build ${__BUILD_STAMP__}`;
 
 function DecksIcon() {
