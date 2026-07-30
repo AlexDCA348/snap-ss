@@ -29,6 +29,8 @@ import {
 
 const STARTING_HAND = 3;
 const MAX_TURNS = 6;
+/** Cosmos disponible chaque tour en mode Infinity (sandbox). */
+export const INFINITY_COSMOS = 99;
 
 let uidCounter = 0;
 function nextUid(): string {
@@ -68,16 +70,21 @@ function emptyLane(): LaneState {
   return { cards: { player: [], ai: [] } };
 }
 
-/** Mélange les defIds puis répartit main (3) + pile deck — ordre du builder ignoré en partie. */
-function makePlayerFromDeckIds(id: PlayerId, deckIds: string[]): PlayerState {
+/** Mélange les defIds puis répartit main + pile deck — ordre du builder ignoré en partie. */
+function makePlayerFromDeckIds(
+  id: PlayerId,
+  deckIds: string[],
+  startingHandSize: number = STARTING_HAND,
+): PlayerState {
   const shuffledIds = shuffle(deckIds);
   const instances = shuffledIds.map((defId) => instantiate(defId, id));
+  const handSize = Math.min(Math.max(0, startingHandSize), instances.length);
   return {
     id,
     cosmos: 0,
     maxCosmos: 0,
-    deck: instances.slice(STARTING_HAND),
-    hand: instances.slice(0, STARTING_HAND),
+    deck: instances.slice(handSize),
+    hand: instances.slice(0, handSize),
     pending: emptyPending(),
   };
 }
@@ -90,29 +97,41 @@ export function buildRandomDeckForGame(): string[] {
 export interface CreateInitialStateOptions {
   playerDeckIds?: string[];
   aiDeckIds?: string[];
+  mode?: 'standard' | 'infinity';
 }
 
 export function createInitialState(
   options?: CreateInitialStateOptions,
 ): GameState {
   uidCounter = 0;
+  const mode = options?.mode ?? 'standard';
+  const infinity = mode === 'infinity';
   const playerIds =
     options?.playerDeckIds && options.playerDeckIds.length > 0
       ? options.playerDeckIds
       : buildRandomDeck();
   // IA : nouveau deck tiré du pool à chaque partie (sauf override explicite).
   const aiIds = options?.aiDeckIds ?? buildRandomDeck();
-  const player = makePlayerFromDeckIds('player', playerIds);
+  const playerHandSize = infinity ? playerIds.length : STARTING_HAND;
+  const player = makePlayerFromDeckIds('player', playerIds, playerHandSize);
   const ai = makePlayerFromDeckIds('ai', aiIds);
   const locations = shuffle(LOCATIONS).slice(0, 3);
   let state: GameState = {
     turn: 0,
     maxTurns: MAX_TURNS,
     phase: 'setup',
+    mode,
     players: { player, ai },
     locations,
     lanes: [emptyLane(), emptyLane(), emptyLane()],
-    log: [{ turn: 0, text: 'La cosmoénergie s\u2019éveille...' }],
+    log: [
+      {
+        turn: 0,
+        text: infinity
+          ? 'Mode Infinity — cosmos illimité, main complète.'
+          : 'La cosmoénergie s\u2019éveille...',
+      },
+    ],
     graveyard: { player: [], ai: [] },
     totalDestroyed: 0,
     totalDestroyedPower: 0,
@@ -136,20 +155,23 @@ export function startNextTurn(state: GameState): GameState {
     return endGame(state);
   }
   const turn = state.turn + 1;
+  const infinity = state.mode === 'infinity';
   const playerBonus = state.players.player.nextTurnCosmosBonus ?? 0;
   const aiBonus = state.players.ai.nextTurnCosmosBonus ?? 0;
+  const playerCosmos = infinity ? INFINITY_COSMOS : turn + playerBonus;
+  const aiCosmos = infinity ? INFINITY_COSMOS : turn + aiBonus;
   const newPlayers: Record<PlayerId, PlayerState> = {
     player: drawOne({
       ...state.players.player,
-      cosmos: turn + playerBonus,
-      maxCosmos: turn + playerBonus,
+      cosmos: playerCosmos,
+      maxCosmos: playerCosmos,
       nextTurnCosmosBonus: 0,
       pending: emptyPending(),
     }),
     ai: drawOne({
       ...state.players.ai,
-      cosmos: turn + aiBonus,
-      maxCosmos: turn + aiBonus,
+      cosmos: aiCosmos,
+      maxCosmos: aiCosmos,
       nextTurnCosmosBonus: 0,
       pending: emptyPending(),
     }),
@@ -164,8 +186,9 @@ export function startNextTurn(state: GameState): GameState {
       ...state.log,
       {
         turn,
-        text:
-          playerBonus || aiBonus
+        text: infinity
+          ? `Tour ${turn} — Cosmos ∞.`
+          : playerBonus || aiBonus
             ? `Tour ${turn} — Cosmos ${turn} (+bonus).`
             : `Tour ${turn} — Cosmos ${turn}.`,
       },

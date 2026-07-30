@@ -70,9 +70,10 @@ export function Hud({
             className={[
               'shrink-0 rounded-full bg-cosmos-600/80 ring-1 ring-cosmos-300/50 flex flex-col items-center justify-center font-bold text-white',
               mini ? 'w-9 h-9 text-[9px]' : 'w-10 h-10 text-[10px]',
+              state.mode === 'infinity' ? 'ring-cyan-300/60 bg-cyan-700/80' : '',
             ].join(' ')}
           >
-            <span>{cosmos}</span>
+            <span>{state.mode === 'infinity' ? '∞' : cosmos}</span>
           </div>
         ) : null}
         <div

@@ -34,6 +34,8 @@ export function GameScreen() {
   const unplayCard = useGame((s) => s.unplayCard);
   const endTurn = useGame((s) => s.endTurn);
   const newGame = useGame((s) => s.newGame);
+  const newInfinityGame = useGame((s) => s.newInfinityGame);
+  const lastInfinityDeckIds = useGame((s) => s.lastInfinityDeckIds);
   const ikkiPhoenixBursts = useGame((s) => s.ikkiPhoenixBursts);
   const jamianCrowBursts = useGame((s) => s.jamianCrowBursts);
   const deathmaskSoulBursts = useGame((s) => s.deathmaskSoulBursts);
@@ -48,10 +50,11 @@ export function GameScreen() {
   const dismissPendingReward = useCollectionStore((s) => s.dismissPendingReward);
 
   useEffect(() => {
+    if (state.mode === 'infinity') return;
     if (state.phase === 'ended' && state.winner === 'player') {
       grantVictoryRewardForMatch(matchSerial);
     }
-  }, [state.phase, state.winner, matchSerial, grantVictoryRewardForMatch]);
+  }, [state.phase, state.winner, state.mode, matchSerial, grantVictoryRewardForMatch]);
 
   const compact = useCompactUi();
   const mini = useMiniPhone();
@@ -72,6 +75,10 @@ export function GameScreen() {
   };
 
   const handleReplay = () => {
+    if (state.mode === 'infinity' && lastInfinityDeckIds?.length) {
+      newInfinityGame(lastInfinityDeckIds);
+      return;
+    }
     newGame();
   };
 
@@ -221,7 +228,10 @@ export function GameScreen() {
       />
       <DanteChainOverlay bursts={danteChainBursts} compact={compact} />
       <ShiryuDragonCometOverlay bursts={shiryuDragonBursts} compact={compact} />
-      <VictoryRewardModal reward={pendingReward} onDismiss={dismissPendingReward} />
+      <VictoryRewardModal
+        reward={state.mode === 'infinity' ? null : pendingReward}
+        onDismiss={dismissPendingReward}
+      />
       {touchDrag.drag && dragGhostCard ? (
         <TouchDragGhost
           defId={dragGhostCard.defId}

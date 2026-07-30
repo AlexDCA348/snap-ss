@@ -120,10 +120,14 @@ export interface GameLogEntry {
   text: string;
 }
 
+export type GameMode = 'standard' | 'infinity';
+
 export interface GameState {
   turn: number; // 1..6
   maxTurns: number;
   phase: Phase;
+  /** Mode de partie — infinity = sandbox (cosmos infini, pas de récompenses). */
+  mode: GameMode;
   players: Record<PlayerId, PlayerState>;
   locations: LocationDefinition[]; // length 3
   lanes: LaneState[]; // length 3

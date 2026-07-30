@@ -30,23 +30,29 @@ function PlayIcon() {
   );
 }
 
-function ArmoryIcon() {
+function InfinityIcon() {
   return (
     <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" aria-hidden>
       <path
-        d="M12 2 4 5v6c0 5 3.5 8.5 8 11 4.5-2.5 8-6 8-11V5l-8-3z"
+        d="M7.5 12c0 1.8 1.4 3.3 3.2 3.3 1.5 0 2.5-.9 3.3-2.1.8 1.2 1.8 2.1 3.3 2.1 1.8 0 3.2-1.5 3.2-3.3S19.1 8.7 17.3 8.7c-1.5 0-2.5.9-3.3 2.1-.8-1.2-1.8-2.1-3.3-2.1C8.9 8.7 7.5 10.2 7.5 12z"
         stroke="currentColor"
         strokeWidth="1.5"
+        strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <path d="M12 8v8M9 11h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path
+        d="M4 12h1.2M18.8 12H20"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
 
 export function MainMenuScreen() {
   const goToDeckBuilder = useAppStore((s) => s.goToDeckBuilder);
-  const goToArmory = useAppStore((s) => s.goToArmory);
+  const goToInfinity = useAppStore((s) => s.goToInfinity);
   const goToGame = useAppStore((s) => s.goToGame);
   const newGame = useGame((s) => s.newGame);
   const activeDeck = useDeckStore((s) => s.getActiveDeck());
@@ -140,9 +146,9 @@ export function MainMenuScreen() {
               }}
             />
             <NavButton
-              label="Armures"
-              icon={<ArmoryIcon />}
-              onClick={goToArmory}
+              label="Infinity"
+              icon={<InfinityIcon />}
+              onClick={goToInfinity}
             />
           </div>
         </motion.nav>

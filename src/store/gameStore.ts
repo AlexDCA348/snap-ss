@@ -143,7 +143,11 @@ interface GameStore {
   inspectedLane: LocationIndex | null;
   /** Incrémenté à chaque nouvelle partie (idempotence récompenses). */
   matchSerial: number;
+  /** Deck éphémère du dernier match Infinity (pour Rejouer). */
+  lastInfinityDeckIds: string[] | null;
   newGame: () => void;
+  /** Lance une partie sandbox Infinity avec un deck éphémère. */
+  newInfinityGame: (deckIds: string[]) => void;
   playCard: (playerId: PlayerId, uid: string, lane: LocationIndex) => void;
   unplayCard: (playerId: PlayerId, uid: string) => void;
   endTurn: () => void;
@@ -172,6 +176,7 @@ export const useGame = create<GameStore>((set, get) => ({
   danteChainBursts: [],
   andromedaRelocateBursts: [],
   matchSerial: 0,
+  lastInfinityDeckIds: null,
   inspectedUid: null,
   inspectedLane: null,
   newGame: () => {
@@ -182,7 +187,8 @@ export const useGame = create<GameStore>((set, get) => ({
       : undefined;
     set((s) => ({
       matchSerial: s.matchSerial + 1,
-      state: createInitialState({ playerDeckIds }),
+      lastInfinityDeckIds: null,
+      state: createInitialState({ playerDeckIds, mode: 'standard' }),
       resolving: false,
       ptolemyArrowBursts: [],
       miloImpactBursts: [],
@@ -192,9 +198,37 @@ export const useGame = create<GameStore>((set, get) => ({
       ikkiPhoenixBursts: [],
       jamianCrowBursts: [],
       shiryuDragonBursts: [],
-  shuraBladeBursts: [],
-  deathmaskSoulBursts: [],
-  aldebaranImpactBursts: [],
+      shuraBladeBursts: [],
+      deathmaskSoulBursts: [],
+      aldebaranImpactBursts: [],
+      ichiClawBursts: [],
+      hyogaFrostBursts: [],
+      sagaDuplicateBursts: [],
+      capellaDiskBursts: [],
+      danteChainBursts: [],
+      andromedaRelocateBursts: [],
+      inspectedUid: null,
+      inspectedLane: null,
+    }));
+  },
+  newInfinityGame: (deckIds) => {
+    const ids = deckIds.slice(0, 12);
+    set((s) => ({
+      matchSerial: s.matchSerial + 1,
+      lastInfinityDeckIds: [...ids],
+      state: createInitialState({ playerDeckIds: ids, mode: 'infinity' }),
+      resolving: false,
+      ptolemyArrowBursts: [],
+      miloImpactBursts: [],
+      aioliaPlasmaBursts: [],
+      babelFireballBursts: [],
+      aiolosArrowBursts: [],
+      ikkiPhoenixBursts: [],
+      jamianCrowBursts: [],
+      shiryuDragonBursts: [],
+      shuraBladeBursts: [],
+      deathmaskSoulBursts: [],
+      aldebaranImpactBursts: [],
       ichiClawBursts: [],
       hyogaFrostBursts: [],
       sagaDuplicateBursts: [],
