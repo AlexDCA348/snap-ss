@@ -3,9 +3,11 @@ import {
   resolveAndromedaRevealThenRelocate,
   resolveRevealedCardOnLane,
 } from './locationEffects';
+import { resolveShuraRevealThenDestroy } from './abilities';
 import { getRevealOrder } from './engine';
 import { appendRevealedToSide } from './laneRules';
 import type { CardInstance, GameState, LocationIndex, PlayerId } from './types';
+import { SHURA_DEF_ID } from './shuraBlade';
 
 export interface RevealVfxStep {
   pending: CardInstance;
@@ -38,6 +40,8 @@ export interface RevealFrame {
   uid: string;
   /** Carte sur l'Île d'Andromède après au révélé, avant le déplacement. */
   andromedaRelocatePreview?: boolean;
+  /** Shura : carte adverse placée, destruction Excalibur à venir. */
+  shuraDestroyPreview?: boolean;
 }
 
 function laneForCard(
@@ -158,6 +162,59 @@ export function buildRevealTimeline(
             lane: postPos?.lane ?? lane,
             uid: pending.uid,
           });
+
+          s = final;
+          continue;
+        }
+
+        if (pending.defId === SHURA_DEF_ID) {
+          const onLane = stateBeforeEffect.lanes[lane].cards[pid].find(
+            (c) => c.uid === pending.uid,
+          );
+          if (!onLane) {
+            s = resolveRevealedCardOnLane(
+              stateBeforeEffect,
+              lane,
+              pending.uid,
+              pid,
+            );
+            frames.push({
+              state: s,
+              side: pid,
+              lane,
+              uid: pending.uid,
+            });
+            continue;
+          }
+
+          const { afterPlace, final, destroyedUid } =
+            resolveShuraRevealThenDestroy(stateBeforeEffect, onLane, lane);
+
+          // 1) La carte adverse apparaît d'abord.
+          frames.push({
+            state: afterPlace,
+            side: pid,
+            lane,
+            uid: pending.uid,
+          });
+
+          if (destroyedUid) {
+            // 2) Carte encore visible + VFX Excalibur.
+            frames.push({
+              state: afterPlace,
+              side: pid,
+              lane,
+              uid: pending.uid,
+              shuraDestroyPreview: true,
+            });
+            // 3) Destruction résolue.
+            frames.push({
+              state: final,
+              side: pid,
+              lane,
+              uid: pending.uid,
+            });
+          }
 
           s = final;
           continue;

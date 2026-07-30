@@ -527,80 +527,8 @@ const ON_REVEAL: Record<string, OnRevealHandler> = {
   },
 
   /** Shura — ajoute une carte du deck adverse de son côté ici, la détruit si puissance inférieure. */
-  'shura-reveal-and-destroy': (state, source, lane) => {
-    const enemy = otherPlayer(source.ownerId);
-    const enemyPlayer = state.players[enemy];
-    if (enemyPlayer.deck.length === 0) return state;
-
-    const [drawn, ...restDeck] = enemyPlayer.deck;
-    const name = getCardDef(source.defId).name;
-    const drawnDef = getCardDef(drawn.defId);
-
-    if (!canAddRevealedToSide(state, lane, enemy)) {
-      return {
-        ...state,
-        log: [
-          ...state.log,
-          {
-            turn: state.turn,
-            text: `${name} : le côté adverse est plein, impossible d'ajouter une carte.`,
-          },
-        ],
-      };
-    }
-
-    const placed: CardInstance = {
-      ...drawn,
-      revealed: true,
-      playedTurn: state.turn,
-      silenced: false,
-    };
-
-    let next: GameState = {
-      ...state,
-      players: {
-        ...state.players,
-        [enemy]: { ...enemyPlayer, deck: restDeck },
-      },
-    };
-    next = appendRevealedToSide(next, lane, enemy, placed);
-
-    const shuraPower = currentPower(next, source);
-    const drawnPower = currentPower(next, placed);
-
-    next = {
-      ...next,
-      log: [
-        ...next.log,
-        {
-          turn: state.turn,
-          text: `${name} révèle ${drawnDef.name} (${drawnPower}) du deck adverse.`,
-        },
-      ],
-    };
-
-    if (drawnPower < shuraPower) {
-      const result = destroyAtLaneForced(
-        next,
-        lane,
-        enemy,
-        (c) => c.uid === placed.uid,
-        source,
-      );
-      return {
-        ...result.state,
-        log: [
-          ...result.state.log,
-          {
-            turn: state.turn,
-            text: `${drawnDef.name} (${drawnPower}) est inférieur à ${name} (${shuraPower}) — détruit !`,
-          },
-        ],
-      };
-    }
-
-    return next;
-  },
+  'shura-reveal-and-destroy': (state, source, lane) =>
+    resolveShuraRevealThenDestroy(state, source, lane).final,
 
   'debuff-strongest-enemy-here': (state, source, lane) => {
     const def = getCardDef(source.defId);
@@ -1554,6 +1482,159 @@ function hasActiveMisty(state: GameState, ownerId: PlayerId): boolean {
 
 function otherPlayer(id: PlayerId): PlayerId {
   return id === 'player' ? 'ai' : 'player';
+}
+
+export interface ShuraRevealResolve {
+  /** État après placement de la carte adverse (avant destruction éventuelle). */
+  afterPlace: GameState;
+  /** État final après destruction conditionnelle. */
+  final: GameState;
+  placedUid: string | null;
+  destroyedUid: string | null;
+  /** Index de slot de la carte placée côté adverse (pour le VFX). */
+  slotIndex: number;
+  enemySide: PlayerId;
+}
+
+/**
+ * Shura — tire une carte du deck adverse, la place de son côté ici,
+ * puis la détruit seulement si sa puissance est inférieure à celle de Shura
+ * et qu'elle n'est pas indestructible.
+ */
+export function resolveShuraRevealThenDestroy(
+  state: GameState,
+  source: CardInstance,
+  lane: LocationIndex,
+): ShuraRevealResolve {
+  const enemy = otherPlayer(source.ownerId);
+  const empty: ShuraRevealResolve = {
+    afterPlace: state,
+    final: state,
+    placedUid: null,
+    destroyedUid: null,
+    slotIndex: -1,
+    enemySide: enemy,
+  };
+
+  const enemyPlayer = state.players[enemy];
+  if (enemyPlayer.deck.length === 0) return empty;
+
+  const [drawn, ...restDeck] = enemyPlayer.deck;
+  const name = getCardDef(source.defId).name;
+  const drawnDef = getCardDef(drawn.defId);
+
+  if (!canAddRevealedToSide(state, lane, enemy)) {
+    const blocked: GameState = {
+      ...state,
+      log: [
+        ...state.log,
+        {
+          turn: state.turn,
+          text: `${name} : le côté adverse est plein, impossible d'ajouter une carte.`,
+        },
+      ],
+    };
+    return {
+      ...empty,
+      afterPlace: blocked,
+      final: blocked,
+    };
+  }
+
+  const placed: CardInstance = {
+    ...drawn,
+    revealed: true,
+    playedTurn: state.turn,
+    silenced: false,
+  };
+
+  let afterPlace: GameState = {
+    ...state,
+    players: {
+      ...state.players,
+      [enemy]: { ...enemyPlayer, deck: restDeck },
+    },
+  };
+  afterPlace = appendRevealedToSide(afterPlace, lane, enemy, placed);
+
+  const shuraPower = currentPower(afterPlace, source);
+  const drawnPower = currentPower(afterPlace, placed);
+  const slotIndex = afterPlace.lanes[lane].cards[enemy].findIndex(
+    (c) => c.uid === placed.uid,
+  );
+
+  afterPlace = {
+    ...afterPlace,
+    log: [
+      ...afterPlace.log,
+      {
+        turn: state.turn,
+        text: `${name} révèle ${drawnDef.name} (${drawnPower}) du deck adverse.`,
+      },
+    ],
+  };
+
+  if (!(drawnPower < shuraPower)) {
+    return {
+      afterPlace,
+      final: afterPlace,
+      placedUid: placed.uid,
+      destroyedUid: null,
+      slotIndex,
+      enemySide: enemy,
+    };
+  }
+
+  if (isIndestructible(afterPlace, placed, lane)) {
+    const resisted: GameState = {
+      ...afterPlace,
+      log: [
+        ...afterPlace.log,
+        {
+          turn: state.turn,
+          text: `${drawnDef.name} résiste à ${name} !`,
+        },
+      ],
+    };
+    return {
+      afterPlace: resisted,
+      final: resisted,
+      placedUid: placed.uid,
+      destroyedUid: null,
+      slotIndex,
+      enemySide: enemy,
+    };
+  }
+
+  const result = destroyAtLaneForced(
+    afterPlace,
+    lane,
+    enemy,
+    (c) => c.uid === placed.uid,
+    source,
+  );
+  const destroyed = result.destroyed.some((c) => c.uid === placed.uid);
+  const final: GameState = destroyed
+    ? {
+        ...result.state,
+        log: [
+          ...result.state.log,
+          {
+            turn: state.turn,
+            text: `${drawnDef.name} (${drawnPower}) est inférieur à ${name} (${shuraPower}) — détruit !`,
+          },
+        ],
+      }
+    : result.state;
+
+  return {
+    afterPlace,
+    final,
+    placedUid: placed.uid,
+    destroyedUid: destroyed ? placed.uid : null,
+    slotIndex,
+    enemySide: enemy,
+  };
 }
 
 /**

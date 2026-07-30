@@ -1,4 +1,5 @@
-import { enumerateRevealSteps, slotIndexForCard } from './revealVfx';
+import { resolveShuraRevealThenDestroy } from './abilities';
+import { enumerateRevealSteps } from './revealVfx';
 import type { GameState, LocationIndex, PlayerId } from './types';
 
 export const SHURA_DEF_ID = 'shura';
@@ -13,15 +14,15 @@ export interface ShuraBladeBurst {
   stagger: number;
 }
 
-function otherSide(side: PlayerId): PlayerId {
-  return side === 'player' ? 'ai' : 'player';
-}
-
 export function isShuraCard(defId: string): boolean {
   return defId === SHURA_DEF_ID;
 }
 
-/** Lames dorées — au révélé de Shura (carte adverse révélée puis détruite). */
+/**
+ * Lames dorées — au révélé de Shura, seulement si la carte tirée
+ * est détruite (puissance inférieure et non indestructible).
+ * Le slotIndex est pris sur l'état « après placement » (carte encore là).
+ */
 export function collectShuraRevealBlades(
   preReveal: GameState,
   post: GameState,
@@ -31,38 +32,27 @@ export function collectShuraRevealBlades(
   for (const step of enumerateRevealSteps(preReveal, post)) {
     if (step.pending.defId !== SHURA_DEF_ID) continue;
 
-    const enemy = otherSide(step.side);
-    const enemiesAfter = post.lanes[step.lane].cards[enemy];
-    const enemiesBefore = step.stateBeforeEffect.lanes[step.lane].cards[enemy];
-
-    // Cartes apparues côté adverse (tirées du deck) puis détruites.
-    const beforeUids = new Set(enemiesBefore.map((c) => c.uid));
-    const afterUids = new Set(enemiesAfter.map((c) => c.uid));
-
-    const preGraveUids = new Set(
-      preReveal.graveyard[enemy].map((c) => c.uid),
+    const onLane = step.stateBeforeEffect.lanes[step.lane].cards[step.side].find(
+      (c) => c.uid === step.pending.uid,
     );
-    for (const c of post.graveyard[enemy]) {
-      if (preGraveUids.has(c.uid)) continue; // déjà au cimetière avant
-      if (beforeUids.has(c.uid)) continue; // était déjà sur le lieu
-      if (afterUids.has(c.uid)) continue; // encore vivante
+    if (!onLane) continue;
 
-      const slotIndex = slotIndexForCard(
-        post,
-        step.lane,
-        enemy,
-        c.uid,
-      );
-      // Détruite : slot introuvable → fallback 0.
-      bursts.push({
-        sourceUid: step.revealed.uid,
-        targetUid: c.uid,
-        lane: step.lane,
-        targetSide: enemy,
-        slotIndex: slotIndex >= 0 ? slotIndex : 0,
-        stagger: 0,
-      });
-    }
+    const { destroyedUid, slotIndex, enemySide } = resolveShuraRevealThenDestroy(
+      step.stateBeforeEffect,
+      onLane,
+      step.lane,
+    );
+
+    if (!destroyedUid || slotIndex < 0) continue;
+
+    bursts.push({
+      sourceUid: step.revealed.uid,
+      targetUid: destroyedUid,
+      lane: step.lane,
+      targetSide: enemySide,
+      slotIndex,
+      stagger: 0,
+    });
   }
 
   return bursts;

@@ -371,7 +371,9 @@ export const useGame = create<GameStore>((set, get) => ({
         const stepBabel = babelBursts.filter((b) => b.sourceUid === frame.uid);
         const stepAiolos = aiolosBursts.filter((b) => b.sourceUid === frame.uid);
         const stepIkki = ikkiBursts.filter((b) => b.sourceUid === frame.uid);
-        const stepShura = shuraBursts.filter((b) => b.sourceUid === frame.uid);
+        const stepShura = frame.shuraDestroyPreview
+          ? shuraBursts.filter((b) => b.sourceUid === frame.uid)
+          : [];
         const stepDeathmask = deathmaskBursts.filter((b) => b.sourceUid === frame.uid);
         const stepAldebaran = aldebaranBursts.filter((b) => b.sourceUid === frame.uid);
         const stepIchi = ichiBursts.filter((b) => b.sourceUid === frame.uid);
@@ -391,7 +393,6 @@ export const useGame = create<GameStore>((set, get) => ({
             stepBabel.length +
             stepAiolos.length +
             stepIkki.length +
-            stepShura.length +
             stepDeathmask.length +
             stepAldebaran.length +
             stepIchi.length +
@@ -451,6 +452,9 @@ export const useGame = create<GameStore>((set, get) => ({
         elapsed += REVEAL_STEP_MS;
         if (frame.andromedaRelocatePreview) {
           elapsed += ANDROMEDA_RELOCATE_MS;
+        }
+        if (frame.shuraDestroyPreview) {
+          elapsed += SHURA_BLADE_MS;
         }
         if (hasEffect) {
           elapsed += REVEAL_EFFECT_PAUSE_MS;
