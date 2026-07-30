@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useLayoutEffect, useMemo, useState } from 'react';
-import type { SiriusBloomBurst } from '../game/siriusBloom';
+import type { BloomTint, SiriusBloomBurst } from '../game/siriusBloom';
 import { measureLaneSlotViewport } from '../game/vfxMeasure';
 import type { PlayerId } from '../game/types';
 
@@ -18,6 +18,7 @@ interface Point {
 
 interface BurstGeom {
   key: string;
+  tint: BloomTint;
   source: Point;
   target: Point;
   midX: number;
@@ -81,7 +82,8 @@ function measureBurst(burst: SiriusBloomBurst, compact: boolean): BurstGeom | nu
   const lift = compact ? 40 : 64;
 
   return {
-    key: `${burst.sourceUid}->deck-${burst.side}`,
+    key: `${burst.sourceUid}->deck-${burst.side}-${burst.tint}`,
+    tint: burst.tint,
     source,
     target,
     midX: source.x + dx * 0.5 + nx * (compact ? 16 : 28),
@@ -89,12 +91,16 @@ function measureBurst(burst: SiriusBloomBurst, compact: boolean): BurstGeom | nu
   };
 }
 
-/** Sirius — blob rose lumineux vers le deck du propriétaire. */
+function tintClass(base: string, tint: BloomTint): string {
+  return tint === 'blue' ? `${base} ${base}--blue` : base;
+}
+
+/** Blob lumineux vers le deck — rose (Sirius) ou bleu (Kiki, Cygnus Noir…). */
 export function SiriusBloomOverlay({ bursts, compact = false }: Props) {
   const [shots, setShots] = useState<BurstGeom[]>([]);
 
   const burstKey = useMemo(
-    () => bursts.map((b) => `${b.sourceUid}:${b.side}`).join('|'),
+    () => bursts.map((b) => `${b.sourceUid}:${b.side}:${b.tint}`).join('|'),
     [bursts],
   );
 
@@ -143,7 +149,7 @@ export function SiriusBloomOverlay({ bursts, compact = false }: Props) {
           exit={{ opacity: 0 }}
         >
           <motion.span
-            className="sirius-bloom__core"
+            className={tintClass('sirius-bloom__core', shot.tint)}
             style={{ left: 0, top: 0 }}
             initial={{
               x: shot.source.x,
@@ -164,7 +170,7 @@ export function SiriusBloomOverlay({ bursts, compact = false }: Props) {
             }}
           />
           <motion.span
-            className="sirius-bloom__halo"
+            className={tintClass('sirius-bloom__halo', shot.tint)}
             style={{ left: 0, top: 0 }}
             initial={{
               x: shot.source.x,
@@ -185,14 +191,14 @@ export function SiriusBloomOverlay({ bursts, compact = false }: Props) {
             }}
           />
           <motion.span
-            className="sirius-bloom__spark"
+            className={tintClass('sirius-bloom__spark', shot.tint)}
             style={{ left: shot.source.x, top: shot.source.y }}
             initial={{ opacity: 0, scale: 0.4 }}
             animate={{ opacity: [0, 0.95, 0], scale: [0.4, 1.35, 1.7] }}
             transition={{ duration: 0.45, ease: 'easeOut' }}
           />
           <motion.span
-            className="sirius-bloom__impact"
+            className={tintClass('sirius-bloom__impact', shot.tint)}
             style={{ left: shot.target.x, top: shot.target.y }}
             initial={{ opacity: 0, scale: 0.3 }}
             animate={{ opacity: [0, 0, 0.9, 0], scale: [0.3, 0.3, 1.25, 1.7] }}

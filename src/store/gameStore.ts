@@ -58,6 +58,7 @@ import {
   type ShuraSummonBurst,
 } from '../game/shuraSummon';
 import {
+  collectCosmosRevealBlooms,
   collectSiriusRevealBlooms,
   SIRIUS_BLOOM_MS,
   type SiriusBloomBurst,
@@ -320,7 +321,10 @@ export const useGame = create<GameStore>((set, get) => ({
       const shiryuBursts = collectShiryuDeathBursts(afterAi, afterReveal);
       const shuraBursts = collectShuraRevealBlades(afterAi, afterReveal);
       const shuraSummonBursts = collectShuraSummonBursts(afterAi, afterReveal);
-      const siriusBursts = collectSiriusRevealBlooms(afterAi, afterReveal);
+      const siriusBursts = [
+        ...collectSiriusRevealBlooms(afterAi, afterReveal),
+        ...collectCosmosRevealBlooms(afterAi, afterReveal),
+      ];
       const deathmaskBursts = collectDeathmaskRevealSouls(afterAi, afterReveal);
       const aldebaranBursts = collectAldebaranRevealImpacts(afterAi, afterReveal);
       const ichiBursts = collectIchiRevealClaws(afterAi, afterReveal);
