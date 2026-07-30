@@ -417,10 +417,16 @@ export const CARDS: CardDefinition[] = [
   {
     id: 'sirius',
     name: 'Sirius du Grand Chien',
-    cost: 3,
-    power: 5,
+    cost: 1,
+    power: 2,
     faction: 'silver',
     flavor: 'Croc du Grand Chien.',
+    ability: {
+      kind: 'on-reveal',
+      id: 'sirius-buff-top-deck',
+      text: 'Au révélé : +3 à la carte au-dessus de votre deck.',
+      params: { amount: 3 },
+    },
   },
   {
     id: 'babel',

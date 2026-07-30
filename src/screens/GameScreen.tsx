@@ -10,6 +10,7 @@ import { DeathmaskSoulsOverlay } from '../components/DeathmaskSoulsOverlay';
 import { SagaDuplicateOverlay } from '../components/SagaDuplicateOverlay';
 import { AndromedaRelocateOverlay } from '../components/AndromedaRelocateOverlay';
 import { ShuraSummonOverlay } from '../components/ShuraSummonOverlay';
+import { SiriusBloomOverlay } from '../components/SiriusBloomOverlay';
 import { DanteChainOverlay } from '../components/DanteChainOverlay';
 import { ShiryuDragonCometOverlay } from '../components/ShiryuDragonCometOverlay';
 import { IkkiPhoenixOverlay } from '../components/IkkiPhoenixOverlay';
@@ -43,6 +44,7 @@ export function GameScreen() {
   const sagaDuplicateBursts = useGame((s) => s.sagaDuplicateBursts);
   const andromedaRelocateBursts = useGame((s) => s.andromedaRelocateBursts);
   const shuraSummonBursts = useGame((s) => s.shuraSummonBursts);
+  const siriusBloomBursts = useGame((s) => s.siriusBloomBursts);
   const danteChainBursts = useGame((s) => s.danteChainBursts);
   const shiryuDragonBursts = useGame((s) => s.shiryuDragonBursts);
   const matchSerial = useGame((s) => s.matchSerial);
@@ -167,8 +169,14 @@ export function GameScreen() {
             <div
               className={[
                 compact ? 'flex items-end gap-1.5 w-full game-hand' : 'w-full',
+                'relative',
               ].join(' ')}
             >
+              <div
+                data-deck-zone="player"
+                aria-hidden
+                className="pointer-events-none absolute right-1 bottom-2 w-8 h-10 opacity-0"
+              />
               <Hand
                 hand={player.hand}
                 cosmos={player.cosmos}
@@ -228,6 +236,7 @@ export function GameScreen() {
         compact={compact}
       />
       <ShuraSummonOverlay bursts={shuraSummonBursts} compact={compact} />
+      <SiriusBloomOverlay bursts={siriusBloomBursts} compact={compact} />
       <DanteChainOverlay bursts={danteChainBursts} compact={compact} />
       <ShiryuDragonCometOverlay bursts={shiryuDragonBursts} compact={compact} />
       <VictoryRewardModal

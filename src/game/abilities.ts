@@ -71,6 +71,53 @@ const ON_REVEAL: Record<string, OnRevealHandler> = {
     };
   },
 
+  /** Sirius — +N permanent à la carte au-dessus du deck. */
+  'sirius-buff-top-deck': (state, source, _lane) => {
+    const side = source.ownerId;
+    const player = state.players[side];
+    if (player.deck.length === 0) {
+      const name = getCardDef(source.defId).name;
+      return {
+        ...state,
+        log: [
+          ...state.log,
+          {
+            turn: state.turn,
+            text: `${name} : le deck est vide.`,
+          },
+        ],
+      };
+    }
+
+    const def = getCardDef(source.defId);
+    const amount = (def.ability?.params?.amount as number) ?? 3;
+    const [top, ...rest] = player.deck;
+    const buffed: CardInstance = {
+      ...top,
+      basePower: top.basePower + amount,
+    };
+    const topName = getCardDef(top.defId).name;
+    const sourceName = def.name;
+
+    return {
+      ...state,
+      players: {
+        ...state.players,
+        [side]: {
+          ...player,
+          deck: [buffed, ...rest],
+        },
+      },
+      log: [
+        ...state.log,
+        {
+          turn: state.turn,
+          text: `${sourceName} : +${amount} à ${topName} (dessus du deck).`,
+        },
+      ],
+    };
+  },
+
   /** Nachi — if you're already winning here, +2 to self; otherwise +1. */
   'nachi-buff-based-on-winning': (state, source, lane) => {
     const power = lanePowerSnapshot(state, lane);
