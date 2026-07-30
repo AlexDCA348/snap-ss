@@ -151,7 +151,7 @@ const ON_REVEAL: Record<string, OnRevealHandler> = {
     return next;
   },
 
-  /** Moses — ajoute la carte du dessus du deck ici s'il reste de la place. */
+  /** Moses — ajoute la carte du dessus du deck ici et joue son Au révélé. */
   'moses-place-top-deck-here': (state, source, lane) => {
     const side = source.ownerId;
     const name = getCardDef(source.defId).name;
@@ -201,7 +201,7 @@ const ON_REVEAL: Record<string, OnRevealHandler> = {
     };
     next = appendRevealedToSide(next, lane, side, placed);
 
-    return {
+    next = {
       ...next,
       log: [
         ...next.log,
@@ -211,6 +211,8 @@ const ON_REVEAL: Record<string, OnRevealHandler> = {
         },
       ],
     };
+
+    return applyPulledCardOnReveal(next, lane, placed.uid);
   },
 
   /** Ptolemy — -3 to the weakest enemy here (permanent). */

@@ -464,7 +464,7 @@ export const CARDS: CardDefinition[] = [
     ability: {
       kind: 'on-reveal',
       id: 'moses-place-top-deck-here',
-      text: 'Au révélé : ajoute la carte du dessus de votre deck ici (s\u2019il reste de la place).',
+      text: 'Au révélé : ajoute la carte du dessus de votre deck ici (s\u2019il reste de la place) ; elle joue son effet Au révélé.',
     },
   },
   {
