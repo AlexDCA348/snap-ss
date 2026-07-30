@@ -1749,7 +1749,7 @@ function applyPulledCardOnReveal(
  * Shura — tire une carte du deck adverse, la place de son côté ici,
  * laisse jouer son effet Au révélé, puis la détruit seulement si sa
  * puissance (après effet) est inférieure à celle de Shura et qu'elle
- * n'est pas indestructible.
+ * n'est pas protégée / indestructible.
  */
 export function resolveShuraRevealThenDestroy(
   state: GameState,
@@ -1799,7 +1799,9 @@ export function resolveShuraRevealThenDestroy(
   const placed: CardInstance = {
     ...drawn,
     revealed: true,
-    playedTurn: state.turn,
+    // Invocation — pas jouée par le propriétaire (ex. Île d'Andromède ne déplace pas).
+    playedTurn: undefined,
+    playedLane: undefined,
     silenced: false,
   };
 
@@ -1877,7 +1879,7 @@ export function resolveShuraRevealThenDestroy(
     };
   }
 
-  if (isIndestructible(afterEffect, located.card, lane)) {
+  if (isProtected(afterEffect, located.card, lane)) {
     const resisted: GameState = {
       ...afterEffect,
       log: [
@@ -1902,7 +1904,7 @@ export function resolveShuraRevealThenDestroy(
     };
   }
 
-  const result = destroyAtLaneForced(
+  const result = destroyAtLane(
     afterEffect,
     lane,
     located.side,

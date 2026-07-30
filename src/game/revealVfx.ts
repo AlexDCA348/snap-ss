@@ -1,5 +1,6 @@
 import {
   ANDROMEDA_ISLAND_EFFECT_ID,
+  applyLocationOnCardRevealed,
   resolveAndromedaRevealThenRelocate,
   resolveRevealedCardOnLane,
 } from './locationEffects';
@@ -132,43 +133,8 @@ export function buildRevealTimeline(
           stateBeforeEffect.locations[lane]?.effect?.id ===
           ANDROMEDA_ISLAND_EFFECT_ID;
 
-        if (isAndromeda) {
-          const postPos = laneForCard(postReveal, pending.uid);
-          const willRelocate = postPos !== null && postPos.lane !== lane;
-          const { afterOnReveal, final } = resolveAndromedaRevealThenRelocate(
-            stateBeforeEffect,
-            lane,
-            pending.uid,
-            pid,
-            willRelocate ? postPos.lane : undefined,
-          );
-
-          frames.push({
-            state: stateBeforeEffect,
-            side: pid,
-            lane,
-            uid: pending.uid,
-          });
-
-          frames.push({
-            state: afterOnReveal,
-            side: pid,
-            lane,
-            uid: pending.uid,
-            andromedaRelocatePreview: willRelocate,
-          });
-
-          frames.push({
-            state: final,
-            side: postPos?.side ?? pid,
-            lane: postPos?.lane ?? lane,
-            uid: pending.uid,
-          });
-
-          s = final;
-          continue;
-        }
-
+        // Shura avant Andromède : la carte invoquée reste sur l'île ;
+        // seul Shura est ensuite déplacé par l'effet de lieu.
         if (pending.defId === SHURA_DEF_ID) {
           const onLane = stateBeforeEffect.lanes[lane].cards[pid].find(
             (c) => c.uid === pending.uid,
@@ -235,7 +201,77 @@ export function buildRevealTimeline(
                 uid: pending.uid,
               });
             }
+          } else {
+            frames.push({
+              state: final,
+              side: pid,
+              lane,
+              uid: pending.uid,
+            });
           }
+
+          if (isAndromeda) {
+            const relocated = applyLocationOnCardRevealed(
+              final,
+              lane,
+              pid,
+              pending.uid,
+            );
+            const willRelocate = relocated.lane !== lane;
+            if (willRelocate) {
+              frames.push({
+                state: final,
+                side: pid,
+                lane,
+                uid: pending.uid,
+                andromedaRelocatePreview: true,
+              });
+              frames.push({
+                state: relocated.state,
+                side: pid,
+                lane: relocated.lane,
+                uid: pending.uid,
+              });
+            }
+            s = relocated.state;
+          } else {
+            s = final;
+          }
+          continue;
+        }
+
+        if (isAndromeda) {
+          const postPos = laneForCard(postReveal, pending.uid);
+          const willRelocate = postPos !== null && postPos.lane !== lane;
+          const { afterOnReveal, final } = resolveAndromedaRevealThenRelocate(
+            stateBeforeEffect,
+            lane,
+            pending.uid,
+            pid,
+            willRelocate ? postPos.lane : undefined,
+          );
+
+          frames.push({
+            state: stateBeforeEffect,
+            side: pid,
+            lane,
+            uid: pending.uid,
+          });
+
+          frames.push({
+            state: afterOnReveal,
+            side: pid,
+            lane,
+            uid: pending.uid,
+            andromedaRelocatePreview: willRelocate,
+          });
+
+          frames.push({
+            state: final,
+            side: postPos?.side ?? pid,
+            lane: postPos?.lane ?? lane,
+            uid: pending.uid,
+          });
 
           s = final;
           continue;
