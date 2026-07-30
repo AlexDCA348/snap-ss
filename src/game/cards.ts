@@ -726,14 +726,14 @@ export const CARDS: CardDefinition[] = [
   {
     id: 'orphee',
     name: 'Orphée de la Lyre',
-    cost: 5,
-    power: 5,
+    cost: 3,
+    power: 4,
     faction: 'silver',
     flavor: 'Mélodie fatale.',
     ability: {
       kind: 'on-reveal',
-      id: 'orphee-bounce-enemy-if-losing',
-      text: 'Au révélé : si vous perdez ce lieu, renvoie un ennemi d’ici en main.',
+      id: 'orphee-switch-weakest-here',
+      text: 'Au révélé : la carte à la puissance la plus basse ici change de côté.',
     },
   },
 

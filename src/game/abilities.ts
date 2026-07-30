@@ -437,18 +437,63 @@ const ON_REVEAL: Record<string, OnRevealHandler> = {
     };
   },
 
-  /** Orphée — if losing this lane, bounce a random enemy here to hand. */
-  'orphee-bounce-enemy-if-losing': (state, source, lane) => {
-    const power = lanePowerSnapshot(state, lane);
-    const losing = power[source.ownerId] < power[otherPlayer(source.ownerId)];
-    if (!losing) return state;
-    const enemy = otherPlayer(source.ownerId);
-    const bouncable = state.lanes[lane].cards[enemy].filter(
-      (c) => !isIndestructible(state, c, lane),
-    );
-    if (bouncable.length === 0) return state;
-    const target = bouncable[Math.floor(Math.random() * bouncable.length)];
-    return bounceFromLaneToHand(state, lane, enemy, target.uid, source);
+  /** Orphée — la carte à la puissance la plus basse ici change de côté. */
+  'orphee-switch-weakest-here': (state, source, lane) => {
+    const candidates: { card: CardInstance; side: PlayerId }[] = [];
+    for (const side of ['player', 'ai'] as PlayerId[]) {
+      for (const card of state.lanes[lane].cards[side]) {
+        if (card.uid === source.uid) continue;
+        candidates.push({ card, side });
+      }
+    }
+    if (candidates.length === 0) return state;
+
+    let weakest = candidates[0];
+    let weakestPower = currentPower(state, weakest.card);
+    for (const entry of candidates.slice(1)) {
+      const power = currentPower(state, entry.card);
+      if (power < weakestPower) {
+        weakest = entry;
+        weakestPower = power;
+      }
+    }
+
+    const from = weakest.side;
+    const to = otherPlayer(from);
+    if (!canAddRevealedToSide(state, lane, to)) {
+      const name = getCardDef(source.defId).name;
+      return {
+        ...state,
+        log: [
+          ...state.log,
+          {
+            turn: state.turn,
+            text: `${name} : le côté adverse est plein, impossible de changer ${getCardDef(weakest.card.defId).name} de côté.`,
+          },
+        ],
+      };
+    }
+
+    const transferred: CardInstance = {
+      ...weakest.card,
+      ownerId: to,
+    };
+
+    let next = removeRevealedFromSide(state, lane, from, weakest.card.uid);
+    next = appendRevealedToSide(next, lane, to, transferred);
+
+    const name = getCardDef(source.defId).name;
+    const targetName = getCardDef(weakest.card.defId).name;
+    return {
+      ...next,
+      log: [
+        ...next.log,
+        {
+          turn: next.turn,
+          text: `${name} : ${targetName} (${weakestPower}) change de côté.`,
+        },
+      ],
+    };
   },
 
   /** Kiki — grants +1 cosmos next turn to the owner. */
@@ -1920,54 +1965,6 @@ function hasCardInPlay(state: GameState, ownerId: PlayerId, defId: string): bool
     }
   }
   return false;
-}
-
-function bounceFromLaneToHand(
-  state: GameState,
-  lane: LocationIndex,
-  side: PlayerId,
-  uid: string,
-  source?: CardInstance,
-): GameState {
-  const existing = state.lanes[lane].cards[side].find((c) => c.uid === uid);
-  if (!existing) return state;
-  if (isIndestructible(state, existing, lane)) return state;
-  const newLanes = state.lanes.map((l, i) => {
-    if (i !== lane) return l;
-    return {
-      cards: {
-        player:
-          side === 'player'
-            ? l.cards.player.filter((c) => c.uid !== uid)
-            : l.cards.player,
-        ai:
-          side === 'ai' ? l.cards.ai.filter((c) => c.uid !== uid) : l.cards.ai,
-      },
-    };
-  });
-  const bounced: CardInstance = {
-    ...existing,
-    revealed: false,
-    playedTurn: undefined,
-    silenced: false,
-  };
-  const victimName = getCardDef(existing.defId).name;
-  const sourceName = source ? getCardDef(source.defId).name : null;
-  return {
-    ...state,
-    lanes: newLanes,
-    players: {
-      ...state.players,
-      [side]: { ...state.players[side], hand: [...state.players[side].hand, bounced] },
-    },
-    log: [
-      ...state.log,
-      {
-        turn: state.turn,
-        text: sourceName ? `${sourceName} renvoie ${victimName} en main !` : `${victimName} retourne en main.`,
-      },
-    ],
-  };
 }
 
 function addTokenToLane(
