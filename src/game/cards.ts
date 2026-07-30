@@ -27,8 +27,8 @@ export const CARDS: CardDefinition[] = [
   {
     id: 'black-dragon-double',
     name: 'Double du Dragon Noir',
-    cost: 1,
-    power: 3,
+    cost: 2,
+    power: 6,
     faction: 'black',
     flavor: 'Un mirage brutal.',
   },
@@ -400,9 +400,9 @@ export const CARDS: CardDefinition[] = [
     faction: 'black',
     flavor: 'Ombre du Dragon.',
     ability: {
-      kind: 'on-reveal',
-      id: 'black-dragon-summon-double',
-      text: 'Au révélé : ajoute un double (sans effet) sur votre côté ici.',
+      kind: 'on-destroy',
+      id: 'black-dragon-death-summon-double',
+      text: 'À la destruction : dépose son double (2/6, sans effet) sur ce lieu.',
       params: { tokenId: 'black-dragon-double' },
     },
   },

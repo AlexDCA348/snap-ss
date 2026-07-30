@@ -348,34 +348,6 @@ const ON_REVEAL: Record<string, OnRevealHandler> = {
     };
   },
 
-  /** Dragon Noir — invoque un double sans effet ici (au révélé). */
-  'black-dragon-summon-double': (state, source, lane) => {
-    if (!canAddRevealedToSide(state, lane, source.ownerId)) return state;
-    const def = getCardDef(source.defId);
-    const tokenId =
-      (def.ability?.params?.tokenId as string) ?? 'black-dragon-double';
-    const tokenDef = getCardDef(tokenId);
-    const token: CardInstance = {
-      uid: `t${Math.random().toString(16).slice(2)}`,
-      defId: tokenId,
-      ownerId: source.ownerId,
-      basePower: tokenDef.power,
-      revealed: true,
-      playedTurn: state.turn,
-    };
-    const next = appendRevealedToSide(state, lane, source.ownerId, token);
-    return {
-      ...next,
-      log: [
-        ...next.log,
-        {
-          turn: next.turn,
-          text: `${def.name} invoque un double.`,
-        },
-      ],
-    };
-  },
-
   /** Astérion — remplit ce lieu de doubles sans effet (jusqu’à la capacité). */
   'asterion-create-double': (state, source, lane) => {
     const slots = freeRevealedSlotsOnSide(state, lane, source.ownerId);
@@ -2139,6 +2111,8 @@ export function isProtected(
 }
 
 export const SHIRYU_DEATH_ABILITY_ID = 'shiryu-death-buff-allies';
+export const BLACK_DRAGON_DEATH_ABILITY_ID =
+  'black-dragon-death-summon-double';
 
 /** +N permanent à chaque carte alliée en jeu (même propriétaire, hors ennemis). */
 function buffAlliesInPlay(
@@ -2167,35 +2141,65 @@ function buffAlliesInPlay(
 function applyDestroyedCardEffects(
   state: GameState,
   destroyed: CardInstance[],
+  lane: LocationIndex,
 ): GameState {
   let next = state;
   for (const card of destroyed) {
     const def = getCardDef(card.defId);
-    if (def.ability?.id !== SHIRYU_DEATH_ABILITY_ID) continue;
+    if (def.ability?.kind !== 'on-destroy') continue;
 
-    const amount = (def.ability?.params?.amount as number) ?? 1;
-    const ownerId = card.ownerId;
-    const { state: buffed, hit } = buffAlliesInPlay(
-      next,
-      ownerId,
-      amount,
-      card.uid,
-    );
-    next = buffed;
+    if (def.ability.id === SHIRYU_DEATH_ABILITY_ID) {
+      const amount = (def.ability?.params?.amount as number) ?? 1;
+      const ownerId = card.ownerId;
+      const { state: buffed, hit } = buffAlliesInPlay(
+        next,
+        ownerId,
+        amount,
+        card.uid,
+      );
+      next = buffed;
 
-    next = {
-      ...next,
-      log: [
-        ...next.log,
-        {
-          turn: next.turn,
-          text:
-            hit > 0
-              ? `${def.name} s'élève en comète : +${amount} à ${hit} carte(s) alliée(s).`
-              : `${def.name} s'élève en comète.`,
-        },
-      ],
-    };
+      next = {
+        ...next,
+        log: [
+          ...next.log,
+          {
+            turn: next.turn,
+            text:
+              hit > 0
+                ? `${def.name} s'élève en comète : +${amount} à ${hit} carte(s) alliée(s).`
+                : `${def.name} s'élève en comète.`,
+          },
+        ],
+      };
+      continue;
+    }
+
+    if (def.ability.id === BLACK_DRAGON_DEATH_ABILITY_ID) {
+      if (!canAddRevealedToSide(next, lane, card.ownerId)) continue;
+      const tokenId =
+        (def.ability.params?.tokenId as string) ?? 'black-dragon-double';
+      const tokenDef = getCardDef(tokenId);
+      const token: CardInstance = {
+        uid: `t${Math.random().toString(16).slice(2)}`,
+        defId: tokenId,
+        ownerId: card.ownerId,
+        basePower: tokenDef.power,
+        revealed: true,
+        playedTurn: next.turn,
+      };
+      next = appendRevealedToSide(next, lane, card.ownerId, token);
+      next = {
+        ...next,
+        log: [
+          ...next.log,
+          {
+            turn: next.turn,
+            text: `${def.name} laisse son double sur le lieu.`,
+          },
+        ],
+      };
+    }
   }
   return next;
 }
@@ -2275,7 +2279,7 @@ export function destroyAtLane(
     log: [...state.log, ...destroyLogs, ...protectLogs],
   };
   return {
-    state: applyDestroyedCardEffects(baseState, destroyed),
+    state: applyDestroyedCardEffects(baseState, destroyed, lane),
     destroyed,
   };
 }
@@ -2345,7 +2349,7 @@ export function destroyAtLaneForced(
     log: [...state.log, ...destroyLogs, ...protectLogs],
   };
   return {
-    state: applyDestroyedCardEffects(baseState, destroyed),
+    state: applyDestroyedCardEffects(baseState, destroyed, lane),
     destroyed,
   };
 }
