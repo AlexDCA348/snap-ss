@@ -11,6 +11,7 @@ import { MainMenuBackground } from '../components/menu/MainMenuBackground';
 import { NavButton } from '../components/menu/NavButton';
 
 const MENU_LOGO_URL = `${import.meta.env.BASE_URL}menu/logo-saint-seiya-snap.png`;
+const MENU_VERSION_LABEL = `v${__APP_VERSION__} · build ${__BUILD_STAMP__}`;
 
 function DecksIcon() {
   return (
@@ -70,6 +71,9 @@ export function MainMenuScreen() {
           height={272}
           decoding="async"
         />
+        <p className="mt-2 text-[9px] uppercase tracking-[0.22em] text-white/55">
+          {MENU_VERSION_LABEL}
+        </p>
       </h1>
 
       <div className="relative z-10 flex flex-col flex-1 min-h-0">

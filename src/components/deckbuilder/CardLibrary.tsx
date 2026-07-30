@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { getPlayableCardDefs } from '../../game/deckPool';
+import { getBuildableCardDefs, isCardUnlockedForDeck } from '../../game/deckPool';
 import { defToPreviewInstance } from '../../game/cardPreview';
 import type { Faction } from '../../game/types';
 import { useCollectionStore } from '../../store/collectionStore';
@@ -37,7 +37,7 @@ export function CardLibrary({ deckCardIds, onAdd, onInspect }: Props) {
   const [sort, setSort] = useState<LibrarySort>('cost');
 
   const filtered = useMemo(() => {
-    let list = getPlayableCardDefs(collection);
+    let list = getBuildableCardDefs();
     const q = search.trim().toLowerCase();
     if (q) {
       list = list.filter(
@@ -140,13 +140,14 @@ export function CardLibrary({ deckCardIds, onAdd, onInspect }: Props) {
         <div className="grid grid-cols-6 gap-2 w-full">
           {filtered.map((def) => {
             const inDeck = deckSet.has(def.id);
-            const disabled = inDeck || full;
+            const owned = isCardUnlockedForDeck(def.id, collection);
+            const disabled = inDeck || full || !owned;
             return (
               <div
                 key={def.id}
                 className={[
                   'relative flex justify-center transition',
-                  disabled ? 'opacity-45 saturate-50' : 'hover:scale-[1.03]',
+                  disabled ? 'opacity-45 saturate-[0.2]' : 'hover:scale-[1.03]',
                 ].join(' ')}
               >
                 <CardView
@@ -155,9 +156,15 @@ export function CardLibrary({ deckCardIds, onAdd, onInspect }: Props) {
                   holoMode="static"
                   onClick={() => {
                     if (inDeck) onInspect(def.id);
-                    else if (!full) onAdd(def.id);
+                    else if (owned && !full) onAdd(def.id);
+                    else onInspect(def.id);
                   }}
                 />
+                {!owned ? (
+                  <span className="absolute inset-x-1 bottom-1 text-[8px] uppercase tracking-wider text-center rounded bg-black/75 text-ui-muted py-0.5">
+                    Verrouillée
+                  </span>
+                ) : null}
               </div>
             );
           })}

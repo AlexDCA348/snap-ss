@@ -17,7 +17,7 @@ function getCollection(collection?: PlayerCollection): PlayerCollection {
   return collection ?? useCollectionStore.getState().collection;
 }
 
-function isCardUnlockedForDeck(cardId: string, collection: PlayerCollection): boolean {
+export function isCardUnlockedForDeck(cardId: string, collection: PlayerCollection): boolean {
   if (STARTER_CARD_ID_SET.has(cardId)) return true;
   return collection.unlockedCards.includes(cardId);
 }

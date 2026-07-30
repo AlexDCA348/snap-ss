@@ -20,12 +20,19 @@ const FACTION_LABEL: Record<Faction, { label: string; tint: string }> = {
 interface Props {
   defId: string | null;
   canAdd: boolean;
+  addDisabledReason?: string | null;
   onClose: () => void;
   onAdd: (defId: string) => void;
 }
 
 /** Modal transparente — aperçu carte + ajout au deck. */
-export function CardPickDetailModal({ defId, canAdd, onClose, onAdd }: Props) {
+export function CardPickDetailModal({
+  defId,
+  canAdd,
+  addDisabledReason = null,
+  onClose,
+  onAdd,
+}: Props) {
   useEffect(() => {
     if (!defId) return;
     const onKey = (e: KeyboardEvent) => {
@@ -106,6 +113,12 @@ export function CardPickDetailModal({ defId, canAdd, onClose, onAdd }: Props) {
                 Aucune capacité.
               </p>
             )}
+
+            {!canAdd && addDisabledReason ? (
+              <p className="text-xs text-ui-muted text-center">
+                {addDisabledReason}
+              </p>
+            ) : null}
 
             <div className="flex gap-2">
               <button

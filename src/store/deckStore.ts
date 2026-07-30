@@ -1,6 +1,12 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { DECK_SIZE, isValidDeck, shufflePlayableIds } from '../game/deckPool';
+import { useCollectionStore } from './collectionStore';
+import {
+  DECK_SIZE,
+  isCardUnlockedForDeck,
+  isValidDeck,
+  shufflePlayableIds,
+} from '../game/deckPool';
 import { buildPresetDeck, getDeckPreset } from '../game/deckPresets';
 
 export const DECK_SLOT_COUNT = 5;
@@ -72,8 +78,10 @@ export const useDeckStore = create<DeckStore>()(
       addCard: (defId) => {
         const i = get().editingSlotIndex;
         const deck = get().slots[i];
+        const collection = useCollectionStore.getState().collection;
         if (deck.cardIds.length >= DECK_SIZE) return false;
         if (deck.cardIds.includes(defId)) return false;
+        if (!isCardUnlockedForDeck(defId, collection)) return false;
         set((s) => ({
           slots: s.slots.map((d, idx) =>
             idx === i
