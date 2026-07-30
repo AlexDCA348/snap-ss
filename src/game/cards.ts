@@ -685,7 +685,7 @@ export const CARDS: CardDefinition[] = [
     id: 'shura',
     name: 'Shura du Capricorne',
     cost: 4,
-    power: 4,
+    power: 8,
     faction: 'gold',
     flavor: 'Excalibur.',
     ability: {
