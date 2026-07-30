@@ -1,4 +1,5 @@
 import type { GameState } from '../game/types';
+import { isInfinitySandbox } from '../game/engine';
 
 interface Props {
   state: GameState;
@@ -25,6 +26,7 @@ export function Hud({
   compact = false,
   mini = false,
 }: Props) {
+  const sandbox = isInfinitySandbox(state);
   if (compact) {
     return (
       <div
@@ -73,7 +75,7 @@ export function Hud({
               state.mode === 'infinity' ? 'ring-cyan-300/60 bg-cyan-700/80' : '',
             ].join(' ')}
           >
-            <span>{state.mode === 'infinity' ? '∞' : cosmos}</span>
+            <span>{sandbox ? '∞' : cosmos}</span>
           </div>
         ) : null}
         <div

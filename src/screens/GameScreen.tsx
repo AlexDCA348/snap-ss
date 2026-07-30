@@ -38,6 +38,7 @@ export function GameScreen() {
   const newGame = useGame((s) => s.newGame);
   const newInfinityGame = useGame((s) => s.newInfinityGame);
   const lastInfinityDeckIds = useGame((s) => s.lastInfinityDeckIds);
+  const lastInfinityRealConditions = useGame((s) => s.lastInfinityRealConditions);
   const ikkiPhoenixBursts = useGame((s) => s.ikkiPhoenixBursts);
   const jamianCrowBursts = useGame((s) => s.jamianCrowBursts);
   const deathmaskSoulBursts = useGame((s) => s.deathmaskSoulBursts);
@@ -79,7 +80,7 @@ export function GameScreen() {
 
   const handleReplay = () => {
     if (state.mode === 'infinity' && lastInfinityDeckIds?.length) {
-      newInfinityGame(lastInfinityDeckIds);
+      newInfinityGame(lastInfinityDeckIds, lastInfinityRealConditions);
       return;
     }
     newGame();

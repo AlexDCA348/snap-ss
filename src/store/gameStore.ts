@@ -159,9 +159,11 @@ interface GameStore {
   matchSerial: number;
   /** Deck éphémère du dernier match Infinity (pour Rejouer). */
   lastInfinityDeckIds: string[] | null;
+  /** Dernier réglage « conditions réelles » Infinity (pour Rejouer). */
+  lastInfinityRealConditions: boolean;
   newGame: () => void;
   /** Lance une partie sandbox Infinity avec un deck éphémère. */
-  newInfinityGame: (deckIds: string[]) => void;
+  newInfinityGame: (deckIds: string[], realConditions?: boolean) => void;
   playCard: (playerId: PlayerId, uid: string, lane: LocationIndex) => void;
   unplayCard: (playerId: PlayerId, uid: string) => void;
   endTurn: () => void;
@@ -193,6 +195,7 @@ export const useGame = create<GameStore>((set, get) => ({
   andromedaRelocateBursts: [],
   matchSerial: 0,
   lastInfinityDeckIds: null,
+  lastInfinityRealConditions: false,
   inspectedUid: null,
   inspectedLane: null,
   newGame: () => {
@@ -204,6 +207,7 @@ export const useGame = create<GameStore>((set, get) => ({
     set((s) => ({
       matchSerial: s.matchSerial + 1,
       lastInfinityDeckIds: null,
+      lastInfinityRealConditions: false,
       state: createInitialState({ playerDeckIds, mode: 'standard' }),
       resolving: false,
       ptolemyArrowBursts: [],
@@ -229,12 +233,17 @@ export const useGame = create<GameStore>((set, get) => ({
       inspectedLane: null,
     }));
   },
-  newInfinityGame: (deckIds) => {
+  newInfinityGame: (deckIds, realConditions = false) => {
     const ids = deckIds.slice(0, 12);
     set((s) => ({
       matchSerial: s.matchSerial + 1,
       lastInfinityDeckIds: [...ids],
-      state: createInitialState({ playerDeckIds: ids, mode: 'infinity' }),
+      lastInfinityRealConditions: Boolean(realConditions),
+      state: createInitialState({
+        playerDeckIds: ids,
+        mode: 'infinity',
+        infinityRealConditions: Boolean(realConditions),
+      }),
       resolving: false,
       ptolemyArrowBursts: [],
       miloImpactBursts: [],

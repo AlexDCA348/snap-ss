@@ -98,6 +98,13 @@ export interface CreateInitialStateOptions {
   playerDeckIds?: string[];
   aiDeckIds?: string[];
   mode?: 'standard' | 'infinity';
+  /** Infinity : règles normales (cosmos tour / deck+main) au lieu du sandbox. */
+  infinityRealConditions?: boolean;
+}
+
+/** Infinity sandbox = cosmos ∞ + main complète. */
+export function isInfinitySandbox(state: GameState): boolean {
+  return state.mode === 'infinity' && !state.infinityRealConditions;
 }
 
 export function createInitialState(
@@ -106,13 +113,15 @@ export function createInitialState(
   uidCounter = 0;
   const mode = options?.mode ?? 'standard';
   const infinity = mode === 'infinity';
+  const realConditions = infinity && Boolean(options?.infinityRealConditions);
+  const sandbox = infinity && !realConditions;
   const playerIds =
     options?.playerDeckIds && options.playerDeckIds.length > 0
       ? options.playerDeckIds
       : buildRandomDeck();
   // IA : nouveau deck tiré du pool à chaque partie (sauf override explicite).
   const aiIds = options?.aiDeckIds ?? buildRandomDeck();
-  const playerHandSize = infinity ? playerIds.length : STARTING_HAND;
+  const playerHandSize = sandbox ? playerIds.length : STARTING_HAND;
   const player = makePlayerFromDeckIds('player', playerIds, playerHandSize);
   const ai = makePlayerFromDeckIds('ai', aiIds);
   const locations = shuffle(LOCATIONS).slice(0, 3);
@@ -121,6 +130,7 @@ export function createInitialState(
     maxTurns: MAX_TURNS,
     phase: 'setup',
     mode,
+    infinityRealConditions: infinity ? realConditions : undefined,
     players: { player, ai },
     locations,
     lanes: [emptyLane(), emptyLane(), emptyLane()],
@@ -128,7 +138,9 @@ export function createInitialState(
       {
         turn: 0,
         text: infinity
-          ? 'Mode Infinity — cosmos illimité, main complète.'
+          ? realConditions
+            ? 'Mode Infinity — conditions réelles (cosmos & pioche normaux).'
+            : 'Mode Infinity — cosmos illimité, main complète.'
           : 'La cosmoénergie s\u2019éveille...',
       },
     ],
@@ -155,11 +167,11 @@ export function startNextTurn(state: GameState): GameState {
     return endGame(state);
   }
   const turn = state.turn + 1;
-  const infinity = state.mode === 'infinity';
+  const sandbox = isInfinitySandbox(state);
   const playerBonus = state.players.player.nextTurnCosmosBonus ?? 0;
   const aiBonus = state.players.ai.nextTurnCosmosBonus ?? 0;
-  const playerCosmos = infinity ? INFINITY_COSMOS : turn + playerBonus;
-  const aiCosmos = infinity ? INFINITY_COSMOS : turn + aiBonus;
+  const playerCosmos = sandbox ? INFINITY_COSMOS : turn + playerBonus;
+  const aiCosmos = sandbox ? INFINITY_COSMOS : turn + aiBonus;
   const newPlayers: Record<PlayerId, PlayerState> = {
     player: drawOne({
       ...state.players.player,
@@ -186,7 +198,7 @@ export function startNextTurn(state: GameState): GameState {
       ...state.log,
       {
         turn,
-        text: infinity
+        text: sandbox
           ? `Tour ${turn} — Cosmos ∞.`
           : playerBonus || aiBonus
             ? `Tour ${turn} — Cosmos ${turn} (+bonus).`

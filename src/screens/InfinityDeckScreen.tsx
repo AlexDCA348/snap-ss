@@ -57,6 +57,7 @@ export function InfinityDeckScreen() {
   const mini = useMiniPhone();
 
   const [cardIds, setCardIds] = useState<string[]>([]);
+  const [realConditions, setRealConditions] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [presetsOpen, setPresetsOpen] = useState(false);
   const [confirmPresetId, setConfirmPresetId] = useState<string | null>(null);
@@ -136,7 +137,7 @@ export function InfinityDeckScreen() {
       showToast(`Choisissez exactement ${DECK_SIZE} cartes.`);
       return;
     }
-    newInfinityGame(cardIds);
+    newInfinityGame(cardIds, realConditions);
     goToGame();
   };
 
@@ -159,9 +160,42 @@ export function InfinityDeckScreen() {
               Infinity
             </h1>
             <p className="text-[10px] text-ui-muted mt-0.5">
-              Deck éphémère · toutes les cartes · sans récompense
+              {realConditions
+                ? 'Deck éphémère · conditions réelles · sans récompense'
+                : 'Deck éphémère · cosmos ∞ · main complète · sans récompense'}
             </p>
           </div>
+        </div>
+
+        <div className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-white/[0.04] ring-1 ring-white/10 px-3 py-2">
+          <div className="min-w-0">
+            <p className="text-[11px] font-medium text-cosmos-100">
+              Conditions réelles
+            </p>
+            <p className="text-[9px] text-ui-muted mt-0.5 leading-snug">
+              Cosmos et pioche comme une partie normale (deck + main).
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={realConditions}
+            aria-label="Conditions réelles"
+            onClick={() => setRealConditions((v) => !v)}
+            className={[
+              'relative shrink-0 w-11 h-6 rounded-full transition ring-1',
+              realConditions
+                ? 'bg-cyan-500/80 ring-cyan-300/50'
+                : 'bg-white/10 ring-white/15',
+            ].join(' ')}
+          >
+            <span
+              className={[
+                'absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform',
+                realConditions ? 'translate-x-5' : 'translate-x-0',
+              ].join(' ')}
+            />
+          </button>
         </div>
 
         <div className="relative mt-3 flex items-center gap-1.5 overflow-x-auto scrollbar-none">
