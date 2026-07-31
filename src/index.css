@@ -5420,7 +5420,7 @@ button {
 }
 
 .main-menu__logo-img {
-  mix-blend-mode: screen;
+  /* PNG RGBA : transparence native, pas de screen (hack JPG fond noir). */
 }
 
 .campaign-slider__label {
