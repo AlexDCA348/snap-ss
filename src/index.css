@@ -5419,10 +5419,6 @@ button {
   isolation: isolate;
 }
 
-.main-menu__logo-img {
-  /* PNG RGBA : transparence native, pas de screen (hack JPG fond noir). */
-}
-
 .campaign-slider__label {
   display: inline-block;
   padding: 0.3rem 0.75rem;
