@@ -9,6 +9,7 @@ import { useGame } from '../store/gameStore';
 import { CampaignProgressSlider } from '../components/menu/CampaignProgressSlider';
 import { MainMenuBackground } from '../components/menu/MainMenuBackground';
 import { NavButton } from '../components/menu/NavButton';
+import { ProgressBackupControls } from '../components/menu/ProgressBackupControls';
 
 const MENU_LOGO_URL = `${import.meta.env.BASE_URL}menu/logo-home.png?v=${encodeURIComponent(__BUILD_STAMP__)}`;
 const MENU_VERSION_LABEL = `v${__APP_VERSION__} · build ${__BUILD_STAMP__}`;
@@ -81,6 +82,9 @@ export function MainMenuScreen() {
           {MENU_VERSION_LABEL}
         </p>
       </h1>
+      <div className="relative z-10 mx-auto px-4 w-full max-w-md">
+        <ProgressBackupControls />
+      </div>
 
       <div className="relative z-10 flex flex-col flex-1 min-h-0">
       <motion.div
