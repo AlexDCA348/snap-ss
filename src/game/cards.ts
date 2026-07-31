@@ -133,15 +133,15 @@ export const CARDS: CardDefinition[] = [
   {
     id: 'shun',
     name: 'Andromède Shun',
-    cost: 1,
-    power: 1,
+    cost: 2,
+    power: 2,
     faction: 'bronze',
     flavor: 'Chaîne nébulaire.',
     ability: {
       kind: 'ongoing',
       id: 'ongoing-buff-allies-here',
-      text: 'Continu : +1 à vos autres alliés ici.',
-      params: { amount: 1 },
+      text: 'Continu : +2 à vos autres alliés ici.',
+      params: { amount: 2 },
     },
   },
   {
