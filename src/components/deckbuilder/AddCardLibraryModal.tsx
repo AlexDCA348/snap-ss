@@ -100,7 +100,7 @@ export function AddCardLibraryModal({ open, deckCardIds, onClose, onAdd }: Props
           </header>
 
           <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4">
-            <div className="deck-library-modal__grid grid grid-cols-3 gap-3 max-w-md mx-auto">
+            <div className="deck-library-modal__grid grid grid-cols-4 sm:grid-cols-5 gap-2 max-w-lg mx-auto">
               {filters.filtered.map((def) => {
                 const inDeck = filters.deckSet.has(def.id);
                 const owned = isCardUnlockedForDeck(def.id, collection);
@@ -111,24 +111,26 @@ export function AddCardLibraryModal({ open, deckCardIds, onClose, onAdd }: Props
                     type="button"
                     onClick={() => setPickedDefId(def.id)}
                     className={[
-                      'relative flex justify-center rounded-xl transition focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400/60',
+                      'deck-library-modal__slot relative rounded-xl transition focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400/60',
                       disabled
                         ? 'opacity-40 saturate-[0.2]'
                         : 'hover:scale-[1.04] active:scale-[0.98]',
                     ].join(' ')}
                     aria-label={owned ? def.name : `${def.name} (verrouillée)`}
                   >
-                    <CardView
-                      card={defToPreviewInstance(def.id)}
-                      size="sm"
-                      holoMode="static"
-                    />
+                    <div className="deck-library-modal__card">
+                      <CardView
+                        card={defToPreviewInstance(def.id)}
+                        size="sm"
+                        holoMode="static"
+                      />
+                    </div>
                     {inDeck ? (
-                      <span className="absolute inset-x-1 bottom-1 text-[8px] uppercase tracking-wider text-center rounded bg-black/70 text-cosmos-200 py-0.5">
+                      <span className="absolute inset-x-1 bottom-1 text-[8px] uppercase tracking-wider text-center rounded bg-black/70 text-cosmos-200 py-0.5 z-10">
                         Deck
                       </span>
                     ) : !owned ? (
-                      <span className="absolute inset-x-1 bottom-1 text-[8px] uppercase tracking-wider text-center rounded bg-black/75 text-ui-muted py-0.5">
+                      <span className="absolute inset-x-1 bottom-1 text-[8px] uppercase tracking-wider text-center rounded bg-black/75 text-ui-muted py-0.5 z-10">
                         Verrouillée
                       </span>
                     ) : null}

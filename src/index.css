@@ -5282,38 +5282,113 @@ button {
 .deck-list {
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  height: 100%;
 }
 
+/* Mobile : 4×3 — cellules plus hautes, moins d’écart horizontal. */
 .deck-list__grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-template-rows: repeat(4, minmax(0, 1fr));
-  gap: 0.5rem 0.65rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: 0.4rem 0.35rem;
   height: 100%;
   min-height: 0;
   align-content: stretch;
-  justify-items: center;
+  justify-items: stretch;
   padding: 0.125rem 0;
 }
 
+/* Très petit écran : 3×4 compact. */
+@media (max-width: 379px) {
+  .deck-list__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: repeat(4, minmax(0, 1fr));
+    gap: 0.35rem 0.3rem;
+  }
+}
+
+/* Tablette+ : 6×2 — ratio cellule ≈ ratio carte. */
 @media (min-width: 640px) {
   .deck-list__grid {
-    gap: 0.65rem 0.85rem;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem 0.5rem;
   }
 }
 
 .deck-list__slot {
+  container-type: size;
   overflow: visible;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
   width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Remplit la cellule en conservant le ratio carte (~52×72). */
+.deck-list__card-shell {
+  aspect-ratio: 52 / 72;
+  width: min(100cqw, calc(100cqh * 52 / 72));
+  height: min(100cqh, calc(100cqw * 72 / 52));
+  max-width: 100%;
   max-height: 100%;
 }
 
-.deck-list__slot .card-view {
+.deck-list__card-shell .card-view-root {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.deck-list__add {
+  aspect-ratio: 52 / 72;
+  width: min(100cqw, calc(100cqh * 52 / 72));
+  height: min(100cqh, calc(100cqw * 72 / 52));
+  max-width: 100%;
   max-height: 100%;
-  width: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  border: 2px dashed rgba(212, 175, 55, 0.35);
+  background: rgba(0, 0, 0, 0.25);
+  color: rgba(234, 210, 140, 0.5);
+  font-size: 1.5rem;
+  line-height: 1;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.deck-list__add:hover:not(:disabled) {
+  border-color: rgba(212, 175, 55, 0.55);
+  background: rgba(212, 175, 55, 0.1);
+  color: rgba(250, 230, 180, 0.8);
+}
+
+.deck-list__add:disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+/* Fallback sans container queries : hauteur pleine, largeur via ratio. */
+@supports not (width: 1cqw) {
+  .deck-list__card-shell,
+  .deck-list__add {
+    width: auto;
+    height: 100%;
+    max-width: 100%;
+  }
+
+  .deck-list__card-shell .card-view-root {
+    width: auto !important;
+    height: 100% !important;
+    max-width: 100%;
+    aspect-ratio: 52 / 72;
+  }
 }
 
 .deck-tabs {
