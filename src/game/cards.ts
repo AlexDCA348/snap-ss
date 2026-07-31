@@ -322,6 +322,19 @@ export const CARDS: CardDefinition[] = [
       params: { perDestroy: 2 },
     },
   },
+  {
+    id: 'guilty',
+    name: 'Guilty',
+    cost: 3,
+    power: 3,
+    faction: 'neutral',
+    flavor: 'Le masque de la haine.',
+    ability: {
+      kind: 'on-reveal',
+      id: 'guilty-sacrifice-allies-absorb',
+      text: 'Au révélé : détruit vos autres alliés ici, puis gagne la somme de leurs puissances.',
+    },
+  },
 
   // ----- Coût 3 -----
   {

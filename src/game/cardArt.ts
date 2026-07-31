@@ -55,6 +55,7 @@ const ART_OBJECT_POSITION: Partial<Record<string, string>> = {
   capella: 'center 38%',
   dante: 'center 35%',
   'grand-pope-ares': 'center 30%',
+  guilty: 'center 28%',
   roshi: 'center 42%',
 };
 

@@ -94,6 +94,11 @@ import {
   type CapellaDiskBurst,
 } from '../game/capellaDisks';
 import {
+  collectGuiltyRevealSacrifice,
+  guiltySacrificeDurationMs,
+  type GuiltySacrificeBurst,
+} from '../game/guiltySacrifice';
+import {
   collectDanteRevealChains,
   DANTE_CHAIN_MS,
   type DanteChainBurst,
@@ -149,6 +154,8 @@ interface GameStore {
   /** Saga — duplication vers un autre lieu au révélé. */
   sagaDuplicateBursts: SagaDuplicateBurst[];
   capellaDiskBursts: CapellaDiskBurst[];
+  /** Guilty — sacrifice démoniaque au révélé. */
+  guiltySacrificeBursts: GuiltySacrificeBurst[];
   danteChainBursts: DanteChainBurst[];
   /** Île d'Andromède — déplacement vers un autre lieu au révélé. */
   andromedaRelocateBursts: AndromedaRelocateBurst[];
@@ -192,6 +199,7 @@ export const useGame = create<GameStore>((set, get) => ({
   hyogaFrostBursts: [],
   sagaDuplicateBursts: [],
   capellaDiskBursts: [],
+  guiltySacrificeBursts: [],
   danteChainBursts: [],
   andromedaRelocateBursts: [],
   matchSerial: 0,
@@ -228,6 +236,7 @@ export const useGame = create<GameStore>((set, get) => ({
       hyogaFrostBursts: [],
       sagaDuplicateBursts: [],
       capellaDiskBursts: [],
+      guiltySacrificeBursts: [],
       danteChainBursts: [],
       andromedaRelocateBursts: [],
       inspectedUid: null,
@@ -263,6 +272,7 @@ export const useGame = create<GameStore>((set, get) => ({
       hyogaFrostBursts: [],
       sagaDuplicateBursts: [],
       capellaDiskBursts: [],
+      guiltySacrificeBursts: [],
       danteChainBursts: [],
       andromedaRelocateBursts: [],
       inspectedUid: null,
@@ -301,6 +311,7 @@ export const useGame = create<GameStore>((set, get) => ({
       hyogaFrostBursts: [],
       sagaDuplicateBursts: [],
       capellaDiskBursts: [],
+      guiltySacrificeBursts: [],
       danteChainBursts: [],
       andromedaRelocateBursts: [],
     });
@@ -331,6 +342,7 @@ export const useGame = create<GameStore>((set, get) => ({
       const hyogaBursts = collectHyogaRevealFrost(afterAi, afterReveal);
       const sagaBursts = collectSagaRevealDuplicates(afterAi, afterReveal);
       const capellaBursts = collectCapellaRevealDisks(afterAi, afterReveal);
+      const guiltyBursts = collectGuiltyRevealSacrifice(afterAi, afterReveal);
       const danteBursts = collectDanteRevealChains(afterAi, afterReveal);
       const andromedaBursts = collectAndromedaRelocateBursts(afterAi, afterReveal);
 
@@ -385,6 +397,9 @@ export const useGame = create<GameStore>((set, get) => ({
             capellaDiskBursts: prev.capellaDiskBursts.filter(
               (b) => b.sourceUid !== sourceUid,
             ),
+            guiltySacrificeBursts: prev.guiltySacrificeBursts.filter(
+              (b) => b.sourceUid !== sourceUid,
+            ),
             danteChainBursts: prev.danteChainBursts.filter(
               (b) => b.sourceUid !== sourceUid,
             ),
@@ -428,6 +443,7 @@ export const useGame = create<GameStore>((set, get) => ({
           (b) => b.side === 'player' && b.sourceUid === frame.uid,
         );
         const stepCapella = capellaBursts.filter((b) => b.sourceUid === frame.uid);
+        const stepGuilty = guiltyBursts.filter((b) => b.sourceUid === frame.uid);
         const stepDante = danteBursts.filter((b) => b.sourceUid === frame.uid);
         const stepAndromeda = frame.andromedaRelocatePreview
           ? andromedaBursts.filter((b) => b.sourceUid === frame.uid)
@@ -444,6 +460,7 @@ export const useGame = create<GameStore>((set, get) => ({
             stepHyoga.length +
             stepSaga.length +
             stepCapella.length +
+            stepGuilty.length +
             stepDante.length +
             stepSirius.length >
           0;
@@ -468,6 +485,10 @@ export const useGame = create<GameStore>((set, get) => ({
             hyogaFrostBursts: [...prev.hyogaFrostBursts, ...stepHyoga],
             sagaDuplicateBursts: [...prev.sagaDuplicateBursts, ...stepSaga],
             capellaDiskBursts: [...prev.capellaDiskBursts, ...stepCapella],
+            guiltySacrificeBursts: [
+              ...prev.guiltySacrificeBursts,
+              ...stepGuilty,
+            ],
             danteChainBursts: [...prev.danteChainBursts, ...stepDante],
             andromedaRelocateBursts: frame.andromedaRelocatePreview
               ? [...prev.andromedaRelocateBursts, ...stepAndromeda]
@@ -495,6 +516,12 @@ export const useGame = create<GameStore>((set, get) => ({
           if (stepHyoga.length) clearBurst(frame.uid, HYOGA_FROST_MS);
           if (stepSaga.length) clearBurst(frame.uid, SAGA_DUPLICATE_MS);
           if (stepCapella.length) clearBurst(frame.uid, CAPELLA_DISKS_MS);
+          if (stepGuilty.length) {
+            clearBurst(
+              frame.uid,
+              guiltySacrificeDurationMs(stepGuilty[0]?.targets.length ?? 0),
+            );
+          }
           if (stepDante.length) clearBurst(frame.uid, DANTE_CHAIN_MS);
           if (stepAndromeda.length) clearBurst(frame.uid, ANDROMEDA_RELOCATE_MS);
         }, at);
@@ -509,7 +536,9 @@ export const useGame = create<GameStore>((set, get) => ({
         if (frame.shuraDestroyPreview) {
           elapsed += SHURA_BLADE_MS;
         }
-        if (hasEffect) {
+        if (stepGuilty.length) {
+          elapsed += guiltySacrificeDurationMs(stepGuilty[0]?.targets.length ?? 0);
+        } else if (hasEffect) {
           elapsed += REVEAL_EFFECT_PAUSE_MS;
         }
       });

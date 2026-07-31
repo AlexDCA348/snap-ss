@@ -315,6 +315,58 @@ const ON_REVEAL: Record<string, OnRevealHandler> = {
     };
   },
 
+  /**
+   * Guilty — détruit les autres alliés ici, puis absorbe la somme de leurs
+   * puissances (calculée avant destruction). Guilty n’est jamais ciblé.
+   */
+  'guilty-sacrifice-allies-absorb': (state, source, lane) => {
+    const side = source.ownerId;
+    const allies = state.lanes[lane].cards[side].filter(
+      (c) => c.uid !== source.uid,
+    );
+    if (allies.length === 0) return state;
+
+    const powerBefore = new Map(
+      allies.map((c) => [c.uid, currentPower(state, c)] as const),
+    );
+
+    const { state: afterDestroy, destroyed } = destroyAtLane(
+      state,
+      lane,
+      side,
+      (c) => c.uid !== source.uid,
+      source,
+    );
+    if (destroyed.length === 0) return afterDestroy;
+
+    const gained = destroyed.reduce(
+      (sum, card) => sum + (powerBefore.get(card.uid) ?? 0),
+      0,
+    );
+
+    const guilty = afterDestroy.lanes[lane].cards[side].find(
+      (c) => c.uid === source.uid,
+    );
+    if (!guilty) return afterDestroy;
+
+    const next = updateCardInLane(afterDestroy, lane, side, source.uid, {
+      ...guilty,
+      basePower: guilty.basePower + gained,
+    });
+
+    const def = getCardDef(source.defId);
+    return {
+      ...next,
+      log: [
+        ...next.log,
+        {
+          turn: next.turn,
+          text: `${def.name} consume ${destroyed.length} allié(s) : +${gained} pwr.`,
+        },
+      ],
+    };
+  },
+
   /** Dante — détruit toutes les cartes de coût 1 (alliés et ennemis) sur tous les lieux. */
   'dante-destroy-cost-1-all-lanes': (state, source, lane) => {
     void lane;

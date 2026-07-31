@@ -43,6 +43,7 @@ import { MuCrystalShieldAura } from './MuCrystalShieldAura';
 import { PtolemyArrowOverlay } from './PtolemyArrowOverlay';
 import { IchiClawOverlay } from './IchiClawOverlay';
 import { CapellaDisksOverlay } from './CapellaDisksOverlay';
+import { GuiltySacrificeOverlay } from './GuiltySacrificeOverlay';
 import { HyogaFrostOverlay } from './HyogaFrostOverlay';
 import { ShuraBladeOverlay } from './ShuraBladeOverlay';
 import { ShunCosmosAura } from './ShunCosmosAura';
@@ -114,6 +115,7 @@ export function LocationView({
   const aldebaranImpactBursts = useGame((s) => s.aldebaranImpactBursts);
   const ichiClawBursts = useGame((s) => s.ichiClawBursts);
   const capellaDiskBursts = useGame((s) => s.capellaDiskBursts);
+  const guiltySacrificeBursts = useGame((s) => s.guiltySacrificeBursts);
   const hyogaFrostBursts = useGame((s) => s.hyogaFrostBursts);
 
   return (
@@ -365,6 +367,12 @@ export function LocationView({
         <CapellaDisksOverlay
           laneIndex={laneIndex}
           bursts={capellaDiskBursts}
+          containerRef={laneRef}
+          compact={compact}
+        />
+        <GuiltySacrificeOverlay
+          laneIndex={laneIndex}
+          bursts={guiltySacrificeBursts}
           containerRef={laneRef}
           compact={compact}
         />
