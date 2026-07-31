@@ -10,7 +10,7 @@ import { CampaignProgressSlider } from '../components/menu/CampaignProgressSlide
 import { MainMenuBackground } from '../components/menu/MainMenuBackground';
 import { NavButton } from '../components/menu/NavButton';
 
-const MENU_LOGO_URL = `${import.meta.env.BASE_URL}menu/logo-saint-seiya-snap.png?v=${encodeURIComponent(__BUILD_STAMP__)}`;
+const MENU_LOGO_URL = `${import.meta.env.BASE_URL}menu/logo-home.png?v=${encodeURIComponent(__BUILD_STAMP__)}`;
 const MENU_VERSION_LABEL = `v${__APP_VERSION__} · build ${__BUILD_STAMP__}`;
 
 function DecksIcon() {
@@ -73,8 +73,8 @@ export function MainMenuScreen() {
           src={MENU_LOGO_URL}
           alt="Saint Seiya · Snap"
           className="main-menu__logo-img w-full max-w-[min(100%,22rem)] h-auto mx-auto"
-          width={768}
-          height={272}
+          width={1200}
+          height={425}
           decoding="async"
         />
         <p className="mt-2 text-[9px] uppercase tracking-[0.22em] text-white/55">
