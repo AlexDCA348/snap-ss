@@ -731,7 +731,7 @@ export const CARDS: CardDefinition[] = [
     ability: {
       kind: 'on-reveal',
       id: 'orphee-switch-weakest-here',
-      text: 'Au révélé : la carte à la puissance la plus basse ici change de côté.',
+      text: 'Au révélé : la carte à la puissance la plus basse de votre côté ici change de côté.',
     },
   },
 

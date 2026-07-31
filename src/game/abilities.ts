@@ -449,29 +449,25 @@ const ON_REVEAL: Record<string, OnRevealHandler> = {
     };
   },
 
-  /** Orphée — la carte à la puissance la plus basse ici change de côté. */
+  /** Orphée — la carte alliée la plus faible ici change de côté. */
   'orphee-switch-weakest-here': (state, source, lane) => {
-    const candidates: { card: CardInstance; side: PlayerId }[] = [];
-    for (const side of ['player', 'ai'] as PlayerId[]) {
-      for (const card of state.lanes[lane].cards[side]) {
-        if (card.uid === source.uid) continue;
-        candidates.push({ card, side });
-      }
-    }
-    if (candidates.length === 0) return state;
+    const from = source.ownerId;
+    const to = otherPlayer(from);
+    const allies = state.lanes[lane].cards[from].filter(
+      (c) => c.uid !== source.uid,
+    );
+    if (allies.length === 0) return state;
 
-    let weakest = candidates[0];
-    let weakestPower = currentPower(state, weakest.card);
-    for (const entry of candidates.slice(1)) {
-      const power = currentPower(state, entry.card);
+    let weakest = allies[0];
+    let weakestPower = currentPower(state, weakest);
+    for (const card of allies.slice(1)) {
+      const power = currentPower(state, card);
       if (power < weakestPower) {
-        weakest = entry;
+        weakest = card;
         weakestPower = power;
       }
     }
 
-    const from = weakest.side;
-    const to = otherPlayer(from);
     if (!canAddRevealedToSide(state, lane, to)) {
       const name = getCardDef(source.defId).name;
       return {
@@ -480,22 +476,22 @@ const ON_REVEAL: Record<string, OnRevealHandler> = {
           ...state.log,
           {
             turn: state.turn,
-            text: `${name} : le côté adverse est plein, impossible de changer ${getCardDef(weakest.card.defId).name} de côté.`,
+            text: `${name} : le côté adverse est plein, impossible de changer ${getCardDef(weakest.defId).name} de côté.`,
           },
         ],
       };
     }
 
     const transferred: CardInstance = {
-      ...weakest.card,
+      ...weakest,
       ownerId: to,
     };
 
-    let next = removeRevealedFromSide(state, lane, from, weakest.card.uid);
+    let next = removeRevealedFromSide(state, lane, from, weakest.uid);
     next = appendRevealedToSide(next, lane, to, transferred);
 
     const name = getCardDef(source.defId).name;
-    const targetName = getCardDef(weakest.card.defId).name;
+    const targetName = getCardDef(weakest.defId).name;
     return {
       ...next,
       log: [
