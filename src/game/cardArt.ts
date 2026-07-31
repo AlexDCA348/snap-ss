@@ -38,7 +38,8 @@ export function getCardArtCandidates(defId: string): string[] {
   const basePath = resolveArtBase(defId);
   if (!basePath) return [];
   const base = import.meta.env.BASE_URL;
-  return ART_EXT_PRIORITY.map((ext) => `${base}${basePath}${ext}`);
+  const bust = `?v=${encodeURIComponent(__BUILD_STAMP__)}`;
+  return ART_EXT_PRIORITY.map((ext) => `${base}${basePath}${ext}${bust}`);
 }
 
 /** Première URL candidate (PNG si présent dans le manifeste / sur le disque). */
@@ -68,5 +69,7 @@ export type CardArtFormat = 'png' | 'photo';
 /** Format prioritaire (PNG testé en premier par getCardArtCandidates). */
 export function getPreferredCardArtFormat(defId: string): CardArtFormat {
   const first = getCardArtCandidates(defId)[0];
-  return first?.toLowerCase().endsWith('.png') ? 'png' : 'photo';
+  // Ignore query string when detecting format.
+  const pathOnly = first?.split('?')[0]?.toLowerCase() ?? '';
+  return pathOnly.endsWith('.png') ? 'png' : 'photo';
 }
