@@ -258,15 +258,14 @@ export const CARDS: CardDefinition[] = [
   {
     id: 'ikki',
     name: 'Phénix Ikki',
-    cost: 2,
-    power: 3,
+    cost: 1,
+    power: 1,
     faction: 'bronze',
     flavor: 'Renaît de ses cendres.',
     ability: {
-      kind: 'on-reveal',
-      id: 'phoenix-sacrifice-bounce',
-      text: 'Au révélé (1×) : détruit votre allié le plus faible ici, gagne sa puissance, puis retourne en main.',
-      params: { oncePerGame: 1 },
+      kind: 'on-destroy',
+      id: 'ikki-death-double-bounce',
+      text: 'À la destruction : double sa puissance et retourne en main.',
     },
   },
   {

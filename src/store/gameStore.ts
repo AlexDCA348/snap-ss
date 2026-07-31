@@ -8,7 +8,7 @@ import {
 } from '../game/engine';
 import { aiTakeTurn } from '../game/ai';
 import {
-  collectIkkiRevealPhoenix,
+  collectIkkiDeathPhoenix,
   IKKI_PHOENIX_MS,
   type IkkiPhoenixBurst,
 } from '../game/ikkiPhoenix';
@@ -315,7 +315,7 @@ export const useGame = create<GameStore>((set, get) => ({
       const aioliaBursts = collectAioliaRevealPlasma(afterAi, afterReveal);
       const babelBursts = collectBabelRevealFireballs(afterAi, afterReveal);
       const aiolosBursts = collectAiolosRevealArrows(afterAi, afterReveal);
-      const ikkiBursts = collectIkkiRevealPhoenix(afterAi, afterReveal);
+      const ikkiBursts = collectIkkiDeathPhoenix(afterAi, afterReveal);
       const beforeJamian = revealPhaseUntilJamian(afterAi);
       const jamianBursts = collectJamianEndOfRevealCrows(beforeJamian, afterReveal);
       const shiryuBursts = collectShiryuDeathBursts(afterAi, afterReveal);
@@ -413,7 +413,6 @@ export const useGame = create<GameStore>((set, get) => ({
         const stepAiolia = aioliaBursts.filter((b) => b.sourceUid === frame.uid);
         const stepBabel = babelBursts.filter((b) => b.sourceUid === frame.uid);
         const stepAiolos = aiolosBursts.filter((b) => b.sourceUid === frame.uid);
-        const stepIkki = ikkiBursts.filter((b) => b.sourceUid === frame.uid);
         const stepShura = frame.shuraDestroyPreview
           ? shuraBursts.filter((b) => b.sourceUid === frame.uid)
           : [];
@@ -439,7 +438,6 @@ export const useGame = create<GameStore>((set, get) => ({
             stepAiolia.length +
             stepBabel.length +
             stepAiolos.length +
-            stepIkki.length +
             stepDeathmask.length +
             stepAldebaran.length +
             stepIchi.length +
@@ -459,7 +457,6 @@ export const useGame = create<GameStore>((set, get) => ({
             aioliaPlasmaBursts: [...prev.aioliaPlasmaBursts, ...stepAiolia],
             babelFireballBursts: [...prev.babelFireballBursts, ...stepBabel],
             aiolosArrowBursts: [...prev.aiolosArrowBursts, ...stepAiolos],
-            ikkiPhoenixBursts: [...prev.ikkiPhoenixBursts, ...stepIkki],
             shuraBladeBursts: [...prev.shuraBladeBursts, ...stepShura],
             shuraSummonBursts: frame.shuraSummonPreview
               ? [...prev.shuraSummonBursts, ...stepShuraSummon]
@@ -483,7 +480,6 @@ export const useGame = create<GameStore>((set, get) => ({
           if (stepAiolia.length) clearBurst(frame.uid, AIOLIA_PLASMA_MS);
           if (stepBabel.length) clearBurst(frame.uid, BABEL_FIREBALL_MS);
           if (stepAiolos.length) clearBurst(frame.uid, AIOLOS_ARROW_MS);
-          if (stepIkki.length) clearBurst(frame.uid, IKKI_PHOENIX_MS);
           if (stepShura.length) clearBurst(frame.uid, SHURA_BLADE_MS);
           if (stepShuraSummon.length) clearBurst(frame.uid, SHURA_SUMMON_MS);
           if (stepSirius.length) clearBurst(frame.uid, SIRIUS_BLOOM_MS);
@@ -518,13 +514,14 @@ export const useGame = create<GameStore>((set, get) => ({
         }
       });
 
-      // 3) Résolution finale : Jamian, comète Shiryu, tour suivant.
+      // 3) Résolution finale : Jamian, comète Shiryu, phénix Ikki, tour suivant.
       setTimeout(() => {
         if (jamianBursts.length > 0) {
           set({
             state: beforeJamian,
             resolving: false,
             shiryuDragonBursts: shiryuBursts,
+            ikkiPhoenixBursts: ikkiBursts,
             jamianCrowBursts: jamianBursts,
           });
           setTimeout(() => {
@@ -535,11 +532,15 @@ export const useGame = create<GameStore>((set, get) => ({
             state: afterReveal,
             resolving: false,
             shiryuDragonBursts: shiryuBursts,
+            ikkiPhoenixBursts: ikkiBursts,
             jamianCrowBursts: [],
           });
         }
         if (shiryuBursts.length > 0) {
           setTimeout(() => set({ shiryuDragonBursts: [] }), SHIRYU_DRAGON_MS);
+        }
+        if (ikkiBursts.length > 0) {
+          setTimeout(() => set({ ikkiPhoenixBursts: [] }), IKKI_PHOENIX_MS);
         }
       }, elapsed);
     }, 600);

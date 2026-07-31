@@ -142,7 +142,7 @@ function measureBurst(
   };
 }
 
-/** Phénix de feu — survole la carte sacrifiée puis retourne en main (Ikki, 1×). */
+/** Phénix de feu — s’élève sur Ikki puis retourne en main (à la destruction). */
 export function IkkiPhoenixOverlay({ bursts, compact = false }: Props) {
   const [shots, setShots] = useState<PhoenixGeom[]>([]);
 

@@ -744,59 +744,6 @@ const ON_REVEAL: Record<string, OnRevealHandler> = {
     return next;
   },
 
-  /**
-   * Phénix — destroys the weakest other ally in this lane and bounces back to
-   * the deck. Once per partie per Phénix instance: the `abilityUsed` flag
-   * persists when the card returns to the deck (stored as a CardInstance).
-   */
-  'phoenix-sacrifice-bounce': (state, source, lane) => {
-    if (source.abilityUsed) return state;
-    const allies = state.lanes[lane].cards[source.ownerId].filter(
-      (c) => c.uid !== source.uid,
-    );
-    if (allies.length === 0) return state;
-    const weakestPick = allies
-      .map((c) => ({ c, p: currentPower(state, c) }))
-      .sort((a, b) => a.p - b.p)[0];
-    const weakest = weakestPick.c;
-    const { state: afterDestroy, destroyed } = destroyAtLane(
-      state,
-      lane,
-      source.ownerId,
-      (c) => c.uid === weakest.uid,
-      source,
-    );
-    // If the target was protected, the destruction failed — keep the ability
-    // available for a retry.
-    if (destroyed.length === 0) return afterDestroy;
-    // Mark the in-lane Phénix as exhausted, then return it to hand
-    // (preserving the abilityUsed flag on the instance).
-    const gained = Math.max(0, weakestPick.p);
-    const phoenixUsed: CardInstance = {
-      ...source,
-      abilityUsed: true,
-      basePower: source.basePower + gained,
-    };
-    const stateWithFlag = updateCardInLane(
-      afterDestroy,
-      lane,
-      source.ownerId,
-      source.uid,
-      phoenixUsed,
-    );
-    const bounced = returnToHand(stateWithFlag, lane, source.ownerId, phoenixUsed);
-    return {
-      ...bounced,
-      log: [
-        ...bounced.log,
-        {
-          turn: bounced.turn,
-          text: `${getCardDef(source.defId).name} renaît de ses cendres (+${gained}).`,
-        },
-      ],
-    };
-  },
-
   /** Cygne — silences a random opposing card in this lane that has an ongoing. */
   'silence-random-opposing-enemy': (state, source, lane) => {
     const enemy = otherPlayer(source.ownerId);
@@ -835,8 +782,7 @@ const ON_REVEAL: Record<string, OnRevealHandler> = {
       ...dead,
       basePower: def.power,
       revealed: true,
-      // Reset transient flags but preserve abilityUsed so a Phénix that died
-      // mid-bounce-attempt can't farm an extra resurrect-bounce loop.
+      // Reset transient flags (Ikki rebirth keeps its doubled basePower).
       silenced: false,
       playedTurn: state.turn,
     };
@@ -2115,6 +2061,7 @@ export function isProtected(
 export const SHIRYU_DEATH_ABILITY_ID = 'shiryu-death-buff-allies';
 export const BLACK_DRAGON_DEATH_ABILITY_ID =
   'black-dragon-death-summon-double';
+export const IKKI_DEATH_ABILITY_ID = 'ikki-death-double-bounce';
 
 /** +N permanent à chaque carte alliée en jeu (même propriétaire, hors ennemis). */
 function buffAlliesInPlay(
@@ -2198,6 +2145,41 @@ function applyDestroyedCardEffects(
           {
             turn: next.turn,
             text: `${def.name} laisse son double sur le lieu.`,
+          },
+        ],
+      };
+      continue;
+    }
+
+    if (def.ability.id === IKKI_DEATH_ABILITY_ID) {
+      const ownerId = card.ownerId;
+      const doubled = Math.max(0, card.basePower) * 2;
+      const reborn: CardInstance = {
+        ...card,
+        basePower: doubled,
+        revealed: false,
+        playedTurn: undefined,
+        playedLane: undefined,
+        silenced: false,
+      };
+      next = {
+        ...next,
+        graveyard: {
+          ...next.graveyard,
+          [ownerId]: next.graveyard[ownerId].filter((c) => c.uid !== card.uid),
+        },
+        players: {
+          ...next.players,
+          [ownerId]: {
+            ...next.players[ownerId],
+            hand: [...next.players[ownerId].hand, reborn],
+          },
+        },
+        log: [
+          ...next.log,
+          {
+            turn: next.turn,
+            text: `${def.name} renaît de ses cendres (${doubled} pwr) et retourne en main.`,
           },
         ],
       };
@@ -2395,8 +2377,8 @@ export function adjustLanePower(
 
 /**
  * Bounce a card from any lane back to the bottom of its owner's deck.
- * Used by Phénix. Preserves per-instance flags (notably `abilityUsed`) by
- * pushing the full instance — a fresh instantiation would reset them.
+ * Preserves per-instance flags by pushing the full instance —
+ * a fresh instantiation would reset them.
  */
 export function returnToDeck(
   state: GameState,
