@@ -77,7 +77,7 @@ export function ProgressBackupControls() {
           type="button"
           onClick={() => void handleExport()}
           disabled={busy}
-          className="progress-backup__btn"
+          className="progress-backup__btn min-w-[5.5rem] px-3 py-1.5 rounded-full text-[9px] font-semibold uppercase tracking-[0.14em] text-white/85 bg-black/55 border border-white/15 hover:bg-white/10 hover:border-white/30 hover:text-white disabled:opacity-45 disabled:pointer-events-none"
         >
           Exporter
         </button>
@@ -85,7 +85,7 @@ export function ProgressBackupControls() {
           type="button"
           onClick={handleImportPick}
           disabled={busy}
-          className="progress-backup__btn"
+          className="progress-backup__btn min-w-[5.5rem] px-3 py-1.5 rounded-full text-[9px] font-semibold uppercase tracking-[0.14em] text-white/85 bg-black/55 border border-white/15 hover:bg-white/10 hover:border-white/30 hover:text-white disabled:opacity-45 disabled:pointer-events-none"
         >
           Importer
         </button>
