@@ -13,12 +13,12 @@ import { DanteChainOverlay } from '../components/DanteChainOverlay';
 import { ShiryuDragonCometOverlay } from '../components/ShiryuDragonCometOverlay';
 import { IkkiPhoenixOverlay } from '../components/IkkiPhoenixOverlay';
 import { JamianCrowOverlay } from '../components/JamianCrowOverlay';
-import { getCardDef } from '../game/cards';
+import { BlackPegasusCostOverlay } from '../components/BlackPegasusCostOverlay';
 import type { LocationIndex } from '../game/types';
 import { useMiniPhone } from '../hooks/useMiniPhone';
 import { useLockPageScroll } from '../hooks/useLockPageScroll';
 import { canPlay } from '../game/engine';
-import { getHandDeckCostReduction } from '../game/abilities';
+import { getEffectiveCost } from '../game/abilities';
 import { useAppStore } from '../store/appStore';
 import { useCollectionStore } from '../store/collectionStore';
 import { useGame } from '../store/gameStore';
@@ -37,6 +37,7 @@ export function GameScreen() {
   const ikkiPhoenixBursts = useGame((s) => s.ikkiPhoenixBursts);
   const jamianCrowBursts = useGame((s) => s.jamianCrowBursts);
   const deathmaskSoulBursts = useGame((s) => s.deathmaskSoulBursts);
+  const blackPegasusCostBursts = useGame((s) => s.blackPegasusCostBursts);
   const sagaDuplicateBursts = useGame((s) => s.sagaDuplicateBursts);
   const andromedaRelocateBursts = useGame((s) => s.andromedaRelocateBursts);
   const danteChainBursts = useGame((s) => s.danteChainBursts);
@@ -65,7 +66,6 @@ export function GameScreen() {
   selectedCardRef.current = selectedCard;
 
   const player = state.players.player;
-  const costReduction = getHandDeckCostReduction(state, 'player');
 
   const handleMenu = () => {
     goToMenu();
@@ -85,10 +85,9 @@ export function GameScreen() {
   const pickCard = (uid: string) => {
     const card = player.hand.find((c) => c.uid === uid);
     if (!card) return;
-    const def = getCardDef(card.defId);
     setSelectedCard({
       uid,
-      cost: Math.max(0, def.cost - costReduction),
+      cost: getEffectiveCost(card, state, 'player'),
     });
   };
 
@@ -211,6 +210,7 @@ export function GameScreen() {
       <IkkiPhoenixOverlay bursts={ikkiPhoenixBursts} compact={compact} />
       <JamianCrowOverlay bursts={jamianCrowBursts} compact={compact} />
       <DeathmaskSoulsOverlay bursts={deathmaskSoulBursts} compact={compact} />
+      <BlackPegasusCostOverlay bursts={blackPegasusCostBursts} />
       <SagaDuplicateOverlay
         bursts={sagaDuplicateBursts.filter((b) => b.side === 'player')}
         compact={compact}

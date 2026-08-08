@@ -10,8 +10,10 @@ import {
 import type { LocationIndex } from '../game/types';
 
 const SOUL_WISP = auraUrl('deathmask/soul-wisp.svg');
-const ORBIT_GHOSTS = 5;
-const SPAWN_GHOSTS = 3;
+const ORBIT_GHOSTS_DESKTOP = 5;
+const ORBIT_GHOSTS_COMPACT = 2;
+const SPAWN_GHOSTS_DESKTOP = 3;
+const SPAWN_GHOSTS_COMPACT = 1;
 
 interface Props {
   bursts: DeathmaskSoulBurst[];
@@ -98,11 +100,14 @@ function measureBurst(burst: DeathmaskSoulBurst, compact: boolean): BurstGeom | 
     );
   if (!source) return null;
 
-  const orbits: OrbitGhost[] = Array.from({ length: ORBIT_GHOSTS }, (_, i) => ({
+  const orbitCount = compact ? ORBIT_GHOSTS_COMPACT : ORBIT_GHOSTS_DESKTOP;
+  const spawnGhosts = compact ? SPAWN_GHOSTS_COMPACT : SPAWN_GHOSTS_DESKTOP;
+
+  const orbits: OrbitGhost[] = Array.from({ length: orbitCount }, (_, i) => ({
     key: `orbit-${i}`,
     x: source.x,
     y: source.y,
-    baseAngle: (360 / ORBIT_GHOSTS) * i - 90,
+    baseAngle: (360 / orbitCount) * i - 90,
     radius: compact ? 42 + (i % 2) * 14 : 56 + (i % 2) * 18,
     delay: i * 0.08,
   }));
@@ -126,13 +131,13 @@ function measureBurst(burst: DeathmaskSoulBurst, compact: boolean): BurstGeom | 
       delay: 0.35 + spawnIndex * 0.1,
     });
 
-    for (let g = 0; g < SPAWN_GHOSTS; g += 1) {
+    for (let g = 0; g < spawnGhosts; g += 1) {
       const dx = target.x - source.x;
       const dy = target.y - source.y;
       const dist = Math.hypot(dx, dy) || 1;
       const nx = -dy / dist;
       const ny = dx / dist;
-      const spread = (g - 1) * (compact ? 22 : 32);
+      const spread = (g - (spawnGhosts - 1) / 2) * (compact ? 18 : 32);
       const midX = source.x + dx * 0.42 + nx * spread;
       const midY = source.y + dy * 0.32 + ny * spread - (compact ? 36 : 52);
       const angle = (Math.atan2(dy, dx) * 180) / Math.PI + 90;

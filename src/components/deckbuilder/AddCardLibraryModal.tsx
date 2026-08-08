@@ -1,7 +1,9 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import { isCardUnlockedForDeck } from '../../game/deckPool';
 import { defToPreviewInstance } from '../../game/cardPreview';
 import type { Faction } from '../../game/types';
+import { useCollectionStore } from '../../store/collectionStore';
 import { CardView } from '../CardView';
 import { CardPickDetailModal } from './CardPickDetailModal';
 import { useLibraryFilters } from './useLibraryFilters';
@@ -23,6 +25,7 @@ interface Props {
 /** Modal plein écran — bibliothèque filtrable pour ajouter une carte. */
 export function AddCardLibraryModal({ open, deckCardIds, onClose, onAdd }: Props) {
   const filters = useLibraryFilters(deckCardIds);
+  const collection = useCollectionStore((s) => s.collection);
   const [pickedDefId, setPickedDefId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -100,20 +103,20 @@ export function AddCardLibraryModal({ open, deckCardIds, onClose, onAdd }: Props
             <div className="deck-library-modal__grid grid grid-cols-3 gap-3 max-w-md mx-auto">
               {filters.filtered.map((def) => {
                 const inDeck = filters.deckSet.has(def.id);
-                const disabled = inDeck || filters.full;
+                const owned = isCardUnlockedForDeck(def.id, collection);
+                const disabled = inDeck || filters.full || !owned;
                 return (
                   <button
                     key={def.id}
                     type="button"
-                    disabled={disabled}
                     onClick={() => setPickedDefId(def.id)}
                     className={[
                       'relative flex justify-center rounded-xl transition focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400/60',
                       disabled
-                        ? 'opacity-40 saturate-50 cursor-not-allowed'
+                        ? 'opacity-40 saturate-[0.2]'
                         : 'hover:scale-[1.04] active:scale-[0.98]',
                     ].join(' ')}
-                    aria-label={def.name}
+                    aria-label={owned ? def.name : `${def.name} (verrouillée)`}
                   >
                     <CardView
                       card={defToPreviewInstance(def.id)}
@@ -123,6 +126,10 @@ export function AddCardLibraryModal({ open, deckCardIds, onClose, onAdd }: Props
                     {inDeck ? (
                       <span className="absolute inset-x-1 bottom-1 text-[8px] uppercase tracking-wider text-center rounded bg-black/70 text-cosmos-200 py-0.5">
                         Deck
+                      </span>
+                    ) : !owned ? (
+                      <span className="absolute inset-x-1 bottom-1 text-[8px] uppercase tracking-wider text-center rounded bg-black/75 text-ui-muted py-0.5">
+                        Verrouillée
                       </span>
                     ) : null}
                   </button>
@@ -145,8 +152,20 @@ export function AddCardLibraryModal({ open, deckCardIds, onClose, onAdd }: Props
             defId={pickedDefId}
             canAdd={
               pickedDefId !== null &&
+              isCardUnlockedForDeck(pickedDefId, collection) &&
               !filters.deckSet.has(pickedDefId) &&
               !filters.full
+            }
+            addDisabledReason={
+              pickedDefId === null
+                ? null
+                : filters.deckSet.has(pickedDefId)
+                  ? 'Carte déjà présente dans le deck.'
+                  : filters.full
+                    ? 'Deck complet (12 cartes).'
+                    : !isCardUnlockedForDeck(pickedDefId, collection)
+                      ? 'Carte non possédée. Complétez son armure pour l’ajouter.'
+                      : null
             }
             onClose={() => setPickedDefId(null)}
             onAdd={handleAdd}

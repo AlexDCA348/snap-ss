@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { getFeaturedCampaignChapterId } from '../collection/campaignProgress';
 import { ARMORY_HIDDEN_CHAPTER_IDS } from '../collection/config/chapters';
@@ -7,16 +7,23 @@ import { ArmorDetailModal } from '../components/collection/ArmorDetailModal';
 import { ChapterStepTabs } from '../components/collection/ChapterStepTabs';
 import { CollectionArmorRow } from '../components/collection/CollectionArmorRow';
 import { MainMenuBackground } from '../components/menu/MainMenuBackground';
+import { useMiniPhone } from '../hooks/useMiniPhone';
 import { useAppStore } from '../store/appStore';
 import { useCollectionStore } from '../store/collectionStore';
 
 export function ArmoryScreen() {
+  const armoryChapterId = useAppStore((s) => s.armoryChapterId);
   const goToMenu = useAppStore((s) => s.goToMenu);
   const collection = useCollectionStore((s) => s.collection);
   const getArmorViewModels = useCollectionStore((s) => s.getArmorViewModels);
   const getArmorDetail = useCollectionStore((s) => s.getArmorDetail);
-  const [activeChapterId, setActiveChapterId] = useState<ChapterId>(() =>
-    getFeaturedCampaignChapterId(collection),
+  const mini = useMiniPhone();
+  const featuredChapterId = useMemo(
+    () => getFeaturedCampaignChapterId(collection),
+    [collection],
+  );
+  const [activeChapterId, setActiveChapterId] = useState<ChapterId>(
+    () => armoryChapterId ?? featuredChapterId,
   );
   const [selectedArmorId, setSelectedArmorId] = useState<string | null>(null);
 
@@ -34,8 +41,20 @@ export function ArmoryScreen() {
 
   const detail = selectedArmorId ? getArmorDetail(selectedArmorId) : null;
 
+  useEffect(() => {
+    setActiveChapterId(armoryChapterId ?? featuredChapterId);
+    setSelectedArmorId(null);
+  }, [armoryChapterId, featuredChapterId]);
+
   return (
-    <div className="collection-screen relative min-h-screen pt-6 pb-24 overflow-hidden">
+    <div
+      className={[
+        'collection-screen relative min-h-screen overflow-hidden',
+        mini
+          ? 'pt-[max(0.75rem,env(safe-area-inset-top))] pb-20'
+          : 'pt-[max(1.5rem,env(safe-area-inset-top))] pb-24',
+      ].join(' ')}
+    >
       <MainMenuBackground chapterId={activeChapterId} />
 
       <div className="relative z-10">
@@ -44,12 +63,12 @@ export function ArmoryScreen() {
         onChange={setActiveChapterId}
       />
 
-      <div className="max-w-lg mx-auto px-4 md:px-8 mt-5">
+      <div className={['max-w-lg mx-auto px-4 md:px-8', mini ? 'mt-3' : 'mt-5'].join(' ')}>
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.05 }}
-          className="flex flex-col gap-4"
+          className={['flex flex-col', mini ? 'gap-3' : 'gap-4'].join(' ')}
         >
           {filtered.map((armor, index) => (
             <CollectionArmorRow
@@ -72,7 +91,12 @@ export function ArmoryScreen() {
       <ArmorDetailModal detail={detail} onClose={() => setSelectedArmorId(null)} />
 
       <div className="collection-screen__dock fixed bottom-0 inset-x-0 z-20 safe-area-pb pointer-events-none">
-        <div className="flex justify-center px-6 pt-3 pb-4 pointer-events-auto">
+        <div
+          className={[
+            'flex justify-center px-6 pointer-events-auto',
+            mini ? 'pt-2 pb-3' : 'pt-3 pb-4',
+          ].join(' ')}
+        >
           <button
             type="button"
             onClick={goToMenu}

@@ -121,13 +121,13 @@ export const CARDS: CardDefinition[] = [
     id: 'nachi',
     name: 'Nachi du Loup',
     cost: 1,
-    power: 2,
+    power: 1,
     faction: 'bronze',
     flavor: 'Instinct du chasseur.',
     ability: {
-      kind: 'on-reveal',
-      id: 'nachi-buff-based-on-winning',
-      text: 'Au révélé : +2 si vous gagnez déjà ici, sinon +1.',
+      kind: 'ongoing',
+      id: 'ongoing-plus-if-winning-here',
+      text: 'Continu : +1 de puissance si vous gagnez sur cet emplacement.',
     },
   },
   {
@@ -155,14 +155,14 @@ export const CARDS: CardDefinition[] = [
   {
     id: 'black-pegasus',
     name: 'Pégase Noir',
-    cost: 1,
+    cost: 2,
     power: 2,
     faction: 'black',
     flavor: 'Météores corrompus.',
     ability: {
       kind: 'on-reveal',
-      id: 'debuff-random-enemy-here-1',
-      text: 'Au révélé : -1 à une carte ennemie aléatoire ici.',
+      id: 'black-pegasus-raise-enemy-hand-cost',
+      text: 'Au révélé : +2 en coût (total max 7) à une carte au hasard dans la main adverse.',
     },
   },
   {
