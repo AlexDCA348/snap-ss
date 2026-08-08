@@ -404,8 +404,12 @@ export function scoreSnapshot(state: GameState): ScoreSnapshot {
   const totalPower: Record<PlayerId, number> = { player: 0, ai: 0 };
   for (let i = 0; i < 3; i += 1) {
     const lane = state.lanes[i];
-    const pPow = sumLanePower(lane.cards.player, ongoing, state);
-    const aPow = sumLanePower(lane.cards.ai, ongoing, state);
+    const pPow =
+      sumLanePower(lane.cards.player, ongoing, state) +
+      (ongoing.laneBonuses[i]?.player ?? 0);
+    const aPow =
+      sumLanePower(lane.cards.ai, ongoing, state) +
+      (ongoing.laneBonuses[i]?.ai ?? 0);
     lanePower.push({ player: pPow, ai: aPow });
     totalPower.player += pPow;
     totalPower.ai += aPow;

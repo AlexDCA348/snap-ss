@@ -1,9 +1,11 @@
 import { useMemo, useEffect, useState } from 'react';
 import { canPlay } from '../game/engine';
 import { listAthenaRippleSources } from '../game/athenaWave';
+import { listBlackAndromedaVineSources } from '../game/blackAndromedaVines';
 import type { GameState, LocationIndex } from '../game/types';
 import { useGame } from '../store/gameStore';
 import { AthenaRippleOverlay } from './AthenaRippleOverlay';
+import { BlackAndromedaVineOverlay } from './BlackAndromedaVineOverlay';
 import { LocationView } from './LocationView';
 
 interface Props {
@@ -29,6 +31,10 @@ export function Board({
 }: Props) {
   const athenaSources = useMemo(
     () => listAthenaRippleSources(state),
+    [state],
+  );
+  const blackAndromedaVines = useMemo(
+    () => listBlackAndromedaVineSources(state),
     [state],
   );
   const aldebaranBursts = useGame((s) => s.aldebaranImpactBursts);
@@ -79,6 +85,10 @@ export function Board({
       })}
       </div>
       <AthenaRippleOverlay sources={athenaSources} compact={compact} />
+      <BlackAndromedaVineOverlay
+        sources={blackAndromedaVines}
+        compact={compact}
+      />
     </div>
   );
 }

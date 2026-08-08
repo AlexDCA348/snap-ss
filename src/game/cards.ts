@@ -166,19 +166,6 @@ export const CARDS: CardDefinition[] = [
     },
   },
   {
-    id: 'black-andromeda',
-    name: 'Andromède Noir',
-    cost: 1,
-    power: 1,
-    faction: 'black',
-    flavor: 'Chaînes des ténèbres.',
-    ability: {
-      kind: 'ongoing',
-      id: 'ongoing-andromede-noir-per-black',
-      text: 'Continu : +1 pour chaque Chevalier Noir en jeu.',
-    },
-  },
-  {
     id: 'black-phoenix',
     name: 'Phénix Noir',
     cost: 1,
@@ -402,6 +389,20 @@ export const CARDS: CardDefinition[] = [
       kind: 'ongoing',
       id: 'ongoing-silence-lane',
       text: 'Continu : les autres effets continus n\u2019agissent pas ici.',
+    },
+  },
+  {
+    id: 'black-andromeda',
+    name: 'Andromède Noir',
+    cost: 3,
+    power: 1,
+    faction: 'black',
+    flavor: 'Chaînes des ténèbres.',
+    ability: {
+      kind: 'ongoing',
+      id: 'ongoing-buff-adjacent-lanes',
+      text: 'Continu : +3 aux lieux adjacents.',
+      params: { amount: 3 },
     },
   },
   {
