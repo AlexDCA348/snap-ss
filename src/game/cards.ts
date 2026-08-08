@@ -547,6 +547,20 @@ export const CARDS: CardDefinition[] = [
     },
   },
   {
+    id: 'sagittarius-armor',
+    name: 'Armure du Sagittaire',
+    cost: 3,
+    power: 5,
+    faction: 'gold',
+    flavor: 'Le drapé d’or du centaure.',
+    ability: {
+      kind: 'on-reveal',
+      id: 'sagittarius-armor-merge-buff',
+      text: 'Au révélé : fusionne avec une autre carte ici, lui donnant +5 à sa puissance initiale.',
+      params: { amount: 5 },
+    },
+  },
+  {
     id: 'shaka',
     name: 'Shaka de la Vierge',
     cost: 5,

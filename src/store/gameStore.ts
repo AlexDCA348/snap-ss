@@ -74,6 +74,11 @@ import {
   type BlackPegasusCostBurst,
 } from '../game/blackPegasusCost';
 import {
+  collectSagittariusArmorMergeBursts,
+  SAGITTARIUS_ARMOR_MERGE_MS,
+  type SagittariusArmorMergeBurst,
+} from '../game/sagittariusArmorMerge';
+import {
   collectAldebaranRevealImpacts,
   ALDEBARAN_IMPACT_MS,
   type AldebaranImpactBurst,
@@ -150,6 +155,8 @@ interface GameStore {
   siriusBloomBursts: SiriusBloomBurst[];
   /** Pégase Noir — blob rouge vers la main adverse. */
   blackPegasusCostBursts: BlackPegasusCostBurst[];
+  /** Armure du Sagittaire — pièces d’armure + halo. */
+  sagittariusArmorMergeBursts: SagittariusArmorMergeBurst[];
   /** Fantômes DeathMask — révélé uniquement. */
   deathmaskSoulBursts: DeathmaskSoulBurst[];
   /** Aldébaran — atterrissage lourd au révélé. */
@@ -200,7 +207,8 @@ export const useGame = create<GameStore>((set, get) => ({
   shuraBladeBursts: [],
   shuraSummonBursts: [],
   siriusBloomBursts: [],
-      blackPegasusCostBursts: [],
+  blackPegasusCostBursts: [],
+  sagittariusArmorMergeBursts: [],
   deathmaskSoulBursts: [],
   aldebaranImpactBursts: [],
   ichiClawBursts: [],
@@ -239,6 +247,7 @@ export const useGame = create<GameStore>((set, get) => ({
       shuraSummonBursts: [],
       siriusBloomBursts: [],
       blackPegasusCostBursts: [],
+      sagittariusArmorMergeBursts: [],
       deathmaskSoulBursts: [],
       aldebaranImpactBursts: [],
       ichiClawBursts: [],
@@ -276,6 +285,7 @@ export const useGame = create<GameStore>((set, get) => ({
       shuraSummonBursts: [],
       siriusBloomBursts: [],
       blackPegasusCostBursts: [],
+      sagittariusArmorMergeBursts: [],
       deathmaskSoulBursts: [],
       aldebaranImpactBursts: [],
       ichiClawBursts: [],
@@ -316,6 +326,7 @@ export const useGame = create<GameStore>((set, get) => ({
       shuraSummonBursts: [],
       siriusBloomBursts: [],
       blackPegasusCostBursts: [],
+      sagittariusArmorMergeBursts: [],
       deathmaskSoulBursts: [],
       aldebaranImpactBursts: [],
       ichiClawBursts: [],
@@ -348,6 +359,10 @@ export const useGame = create<GameStore>((set, get) => ({
         ...collectCosmosRevealBlooms(afterAi, afterReveal),
       ];
       const blackPegasusBursts = collectBlackPegasusCostBursts(afterAi, afterReveal);
+      const sagittariusBursts = collectSagittariusArmorMergeBursts(
+        afterAi,
+        afterReveal,
+      );
       const deathmaskBursts = collectDeathmaskRevealSouls(afterAi, afterReveal);
       const aldebaranBursts = collectAldebaranRevealImpacts(afterAi, afterReveal);
       const ichiBursts = collectIchiRevealClaws(afterAi, afterReveal);
@@ -392,6 +407,9 @@ export const useGame = create<GameStore>((set, get) => ({
               (b) => b.sourceUid !== sourceUid,
             ),
             blackPegasusCostBursts: prev.blackPegasusCostBursts.filter(
+              (b) => b.sourceUid !== sourceUid,
+            ),
+            sagittariusArmorMergeBursts: prev.sagittariusArmorMergeBursts.filter(
               (b) => b.sourceUid !== sourceUid,
             ),
             deathmaskSoulBursts: prev.deathmaskSoulBursts.filter(
@@ -451,6 +469,9 @@ export const useGame = create<GameStore>((set, get) => ({
           : [];
         const stepSirius = siriusBursts.filter((b) => b.sourceUid === frame.uid);
         const stepBlackPegasus = blackPegasusBursts.filter((b) => b.sourceUid === frame.uid);
+        const stepSagittarius = sagittariusBursts.filter(
+          (b) => b.sourceUid === frame.uid,
+        );
         const stepDeathmask = deathmaskBursts.filter((b) => b.sourceUid === frame.uid);
         const stepAldebaran = aldebaranBursts.filter((b) => b.sourceUid === frame.uid);
         const stepIchi = ichiBursts.filter((b) => b.sourceUid === frame.uid);
@@ -479,7 +500,8 @@ export const useGame = create<GameStore>((set, get) => ({
             stepGuilty.length +
             stepDante.length +
             stepSirius.length +
-            stepBlackPegasus.length >
+            stepBlackPegasus.length +
+            stepSagittarius.length >
           0;
 
         const at = elapsed;
@@ -499,6 +521,10 @@ export const useGame = create<GameStore>((set, get) => ({
             blackPegasusCostBursts: [
               ...prev.blackPegasusCostBursts,
               ...stepBlackPegasus,
+            ],
+            sagittariusArmorMergeBursts: [
+              ...prev.sagittariusArmorMergeBursts,
+              ...stepSagittarius,
             ],
             deathmaskSoulBursts: [...prev.deathmaskSoulBursts, ...stepDeathmask],
             aldebaranImpactBursts: [...prev.aldebaranImpactBursts, ...stepAldebaran],
@@ -526,6 +552,9 @@ export const useGame = create<GameStore>((set, get) => ({
           if (stepShuraSummon.length) clearBurst(frame.uid, SHURA_SUMMON_MS);
           if (stepSirius.length) clearBurst(frame.uid, SIRIUS_BLOOM_MS);
           if (stepBlackPegasus.length) clearBurst(frame.uid, BLACK_PEGASUS_COST_MS);
+          if (stepSagittarius.length) {
+            clearBurst(frame.uid, SAGITTARIUS_ARMOR_MERGE_MS);
+          }
           if (stepDeathmask.length) clearBurst(frame.uid, DEATHMASK_SOULS_MS);
           if (stepAldebaran.length) clearBurst(frame.uid, ALDEBARAN_IMPACT_MS);
           if (stepIchi.length) {
