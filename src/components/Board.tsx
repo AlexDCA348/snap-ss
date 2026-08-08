@@ -78,7 +78,7 @@ export function Board({
         );
       })}
       </div>
-      <AthenaRippleOverlay sources={athenaSources} />
+      <AthenaRippleOverlay sources={athenaSources} compact={compact} />
     </div>
   );
 }

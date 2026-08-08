@@ -2668,6 +2668,119 @@ a {
   pointer-events: none;
 }
 
+/* Mobile : un seul anneau, moins de glow / blur GPU. */
+.athena-ripple__core--lite {
+  width: 18px;
+  height: 18px;
+  box-shadow: 0 0 8px rgba(253, 224, 71, 0.32);
+  animation-duration: 8s;
+}
+
+.athena-ripple__ring--lite {
+  border-width: 1px;
+  box-shadow: 0 0 5px rgba(251, 191, 36, 0.2);
+  animation-duration: 13s;
+  will-change: transform, opacity;
+}
+
+/* Nachi — 3 griffes CSS (léger) quand le +1 gagne ici */
+@keyframes nachiClawSlash {
+  0% {
+    opacity: 0;
+    transform: scaleX(0.15);
+  }
+  18% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0.55;
+    transform: scaleX(1);
+  }
+}
+
+.nachi-claws {
+  position: absolute;
+  inset: 12% 18% 28% 18%;
+  z-index: 6;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.nachi-claws__slash {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.15) 12%,
+    rgba(248, 250, 252, 0.92) 45%,
+    rgba(148, 163, 184, 0.55) 78%,
+    transparent 100%
+  );
+  box-shadow: 0 0 4px rgba(226, 232, 240, 0.45);
+  transform-origin: left center;
+  animation: nachiClawSlash 0.42s ease-out both;
+}
+
+.nachi-claws__slash--a {
+  top: 28%;
+  rotate: -18deg;
+}
+
+.nachi-claws__slash--b {
+  top: 48%;
+  rotate: -14deg;
+  animation-delay: 0.04s;
+}
+
+.nachi-claws__slash--c {
+  top: 68%;
+  rotate: -10deg;
+  animation-delay: 0.08s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nachi-claws__slash {
+    animation: none;
+    opacity: 0.55;
+    transform: scaleX(1);
+  }
+}
+
+/* Pégase Noir — blob rouge + flash noir (léger) */
+.black-pegasus-cost__blob {
+  position: fixed;
+  width: 22px;
+  height: 22px;
+  margin-left: -11px;
+  margin-top: -11px;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    rgba(254, 202, 202, 0.95) 0%,
+    rgba(220, 38, 38, 0.85) 42%,
+    rgba(127, 29, 29, 0.35) 70%,
+    transparent 78%
+  );
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.55);
+  pointer-events: none;
+}
+
+.black-pegasus-cost__flash {
+  position: fixed;
+  width: 52px;
+  height: 72px;
+  margin-left: -26px;
+  margin-top: -36px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.88);
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.65);
+  pointer-events: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .athena-ripple__ring,
   .athena-ripple__core {
@@ -4452,6 +4565,51 @@ button {
     drop-shadow(0 0 36px rgba(125, 211, 252, 0.55));
   mix-blend-mode: screen;
   pointer-events: none;
+}
+
+@media (max-width: 767px) {
+  .deathmask-souls__source-vortex {
+    width: 110px;
+    height: 110px;
+    margin-left: -55px;
+    margin-top: -55px;
+    filter: blur(6px);
+  }
+
+  .deathmask-souls__source-core {
+    width: 52px;
+    height: 52px;
+    margin-left: -26px;
+    margin-top: -26px;
+    filter: blur(3px);
+  }
+
+  .deathmask-souls__wisp {
+    width: 28px;
+    height: 64px;
+    margin-left: -14px;
+    margin-top: -32px;
+    filter:
+      blur(1.5px)
+      drop-shadow(0 0 8px rgba(186, 230, 253, 0.75));
+  }
+
+  .deathmask-souls__spawn-glow {
+    width: 40px;
+    height: 40px;
+    margin-left: -20px;
+    margin-top: -20px;
+    filter: blur(3px);
+    box-shadow: 0 0 12px rgba(186, 230, 253, 0.55);
+  }
+
+  .deathmask-souls__lane-veil {
+    width: 88px;
+    height: 88px;
+    margin-left: -44px;
+    margin-top: -44px;
+    filter: blur(8px);
+  }
 }
 
 .deathmask-souls__wisp--orbit {

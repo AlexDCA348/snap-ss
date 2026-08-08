@@ -21,6 +21,9 @@ import {
 } from './laneRules';
 import { scoringPower } from './sagaIllusion';
 
+/** Plafond def.cost + costDelta (Pégase Noir, etc.). */
+export const MAX_CARD_COST = 7;
+
 /**
  * On-reveal abilities mutate the lane state directly (typically by adjusting
  * a card's `basePower`). Ongoing abilities are pure: they produce a map of
@@ -116,20 +119,6 @@ const ON_REVEAL: Record<string, OnRevealHandler> = {
         },
       ],
     };
-  },
-
-  /** Nachi — if you're already winning here, +2 to self; otherwise +1. */
-  'nachi-buff-based-on-winning': (state, source, lane) => {
-    const power = lanePowerSnapshot(state, lane);
-    const winning = power[source.ownerId] > power[otherPlayer(source.ownerId)];
-    const delta = winning ? 2 : 1;
-    return adjustLanePower(
-      state,
-      lane,
-      source.ownerId,
-      delta,
-      (c) => c.uid === source.uid,
-    );
   },
 
   /** Babel — destroys a random enemy here with cost 1 or 2. */
@@ -852,19 +841,49 @@ const ON_REVEAL: Record<string, OnRevealHandler> = {
     };
   },
 
-  /** Pégase Noir — -1 to a random enemy here (permanent). */
-  'debuff-random-enemy-here-1': (state, source, lane) => {
+  /**
+   * Pégase Noir — +2 coût (plafond def+delta = 7) à une carte
+   * aléatoire de la main adverse.
+   */
+  'black-pegasus-raise-enemy-hand-cost': (state, source) => {
     const enemy = otherPlayer(source.ownerId);
-    const enemies = state.lanes[lane].cards[enemy];
-    if (enemies.length === 0) return state;
-    const target = enemies[Math.floor(Math.random() * enemies.length)];
-    return adjustLanePower(
-      state,
-      lane,
-      enemy,
-      -1,
-      (c) => c.uid === target.uid,
+    const hand = state.players[enemy].hand;
+    if (hand.length === 0) return state;
+    const target = hand[Math.floor(Math.random() * hand.length)];
+    const def = getCardDef(target.defId);
+    const current = def.cost + (target.costDelta ?? 0);
+    const add = Math.min(2, Math.max(0, MAX_CARD_COST - current));
+    if (add <= 0) {
+      return {
+        ...state,
+        log: [
+          ...state.log,
+          {
+            turn: state.turn,
+            text: `${getCardDef(source.defId).name} ne peut plus alourdir ${def.name}.`,
+          },
+        ],
+      };
+    }
+    const nextHand = hand.map((c) =>
+      c.uid === target.uid
+        ? { ...c, costDelta: (c.costDelta ?? 0) + add }
+        : c,
     );
+    return {
+      ...state,
+      players: {
+        ...state.players,
+        [enemy]: { ...state.players[enemy], hand: nextHand },
+      },
+      log: [
+        ...state.log,
+        {
+          turn: state.turn,
+          text: `${getCardDef(source.defId).name} alourdit ${def.name} (+${add} coût).`,
+        },
+      ],
+    };
   },
 
   /** Cygnus Noir — +2 cosmos next turn, then self-destructs. */
@@ -1137,6 +1156,11 @@ const ONGOING: Record<string, OngoingHandler> = {
   'ongoing-reduce-cost-hand-deck': () => ({}),
   'ongoing-increase-enemy-hand-cost': () => ({}),
   'ongoing-tick-summon-double-once': () => ({}),
+  /**
+   * Nachi — appliqué en post-passe (`applyWinningLaneBonuses`) pour éviter
+   * la récursion via lanePower / computeOngoing.
+   */
+  'ongoing-plus-if-winning-here': () => ({}),
 };
 
 /**
@@ -1293,7 +1317,41 @@ export function computeOngoing(state: GameState): OngoingResult {
     multipliers,
     uidIndex,
   );
+  applyWinningLaneBonuses(state, modifiers, multipliers, silencedLanes);
   return { modifiers, multipliers };
+}
+
+/**
+ * Nachi (+1 si on gagne ici) — calcule la puissance avec les autres continus
+ * déjà résolus, puis ajoute le bonus (×2 au Sanctuaire).
+ */
+function applyWinningLaneBonuses(
+  state: GameState,
+  modifiers: Record<string, number>,
+  multipliers: Record<string, number>,
+  silencedLanes: Set<LocationIndex>,
+): void {
+  const ongoing = { modifiers, multipliers };
+  for (const l of [0, 1, 2] as LocationIndex[]) {
+    if (silencedLanes.has(l)) continue;
+    const powers: Record<PlayerId, number> = { player: 0, ai: 0 };
+    for (const side of ['player', 'ai'] as PlayerId[]) {
+      for (const c of state.lanes[l].cards[side]) {
+        powers[side] += scoringPower(state, c, ongoing);
+      }
+    }
+    for (const side of ['player', 'ai'] as PlayerId[]) {
+      if (powers[side] <= powers[otherPlayer(side)]) continue;
+      for (const c of state.lanes[l].cards[side]) {
+        if (c.silenced) continue;
+        const def = getCardDef(c.defId);
+        if (def.ability?.id !== 'ongoing-plus-if-winning-here') continue;
+        let amount = 1;
+        if (isSanctuaryLane(state, l, silencedLanes)) amount *= 2;
+        modifiers[c.uid] = (modifiers[c.uid] ?? 0) + amount;
+      }
+    }
+  }
 }
 
 /** True if `lane` currently has an active (non-silenced) lane silencer. */
@@ -1382,10 +1440,21 @@ export function getEffectiveHandCost(
   state: GameState,
   ownerId: PlayerId,
   baseCost: number,
+  costDelta = 0,
 ): number {
   const reduction = getHandDeckCostReduction(state, ownerId);
   const increase = getEnemyHandCostIncrease(state, ownerId);
-  return Math.max(0, baseCost - reduction + increase);
+  return Math.max(0, baseCost + costDelta - reduction + increase);
+}
+
+/** Coût jouable d'une instance (inclut costDelta + réductions + taxes). */
+export function getEffectiveCost(
+  card: CardInstance,
+  state: GameState,
+  ownerId: PlayerId = card.ownerId,
+): number {
+  const def = getCardDef(card.defId);
+  return getEffectiveHandCost(state, ownerId, def.cost, card.costDelta ?? 0);
 }
 
 // ---------------------------------------------------------------------------
@@ -1949,21 +2018,6 @@ function isPowerDecreaseImmune(
     }
   }
   return false;
-}
-
-function lanePowerSnapshot(
-  state: GameState,
-  lane: LocationIndex,
-): Record<PlayerId, number> {
-  const out: Record<PlayerId, number> = { player: 0, ai: 0 };
-  const ongoing = computeOngoing(state);
-  for (const c of state.lanes[lane].cards.player) {
-    out.player += scoringPower(state, c, ongoing);
-  }
-  for (const c of state.lanes[lane].cards.ai) {
-    out.ai += scoringPower(state, c, ongoing);
-  }
-  return out;
 }
 
 function hasCardInPlay(state: GameState, ownerId: PlayerId, defId: string): boolean {

@@ -9,7 +9,7 @@ import {
   applyOnReveal,
   currentPower,
   destroyAtLane,
-  getEffectiveHandCost,
+  getEffectiveCost,
   isIndestructible,
   isLaneSilenced,
   isOnRevealDisabled,
@@ -130,8 +130,7 @@ export function isCardAllowedByLaneRestrictions(
   const minCost = getLaneMinCost(state, lane);
   if (maxCost === null && minCost === null) return true;
 
-  const def = getCardDef(card.defId);
-  const effectiveCost = getEffectiveHandCost(state, side, def.cost);
+  const effectiveCost = getEffectiveCost(card, state, side);
 
   if (maxCost !== null && effectiveCost > maxCost) return false;
   if (minCost !== null && effectiveCost < minCost) return false;

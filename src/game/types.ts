@@ -47,6 +47,11 @@ export interface CardInstance {
   ownerId: PlayerId;
   /** Current power, after on-reveal mutations (does NOT include ongoing buffs). */
   basePower: number;
+  /**
+   * Surplus de coût permanent (ex. Pégase Noir).
+   * Coût affiché / joué = def.cost + costDelta − réductions (plafond 7 sur def+delta).
+   */
+  costDelta?: number;
   /** Turn the card was played, used for stable ordering on reveal. */
   playedTurn?: number;
   /** Lieu où la carte a été jouée (phase de jeu), pour Pont de Jamir etc. */

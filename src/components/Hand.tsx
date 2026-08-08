@@ -4,7 +4,7 @@ import { getCardDef } from '../game/cards';
 import { handCardSize } from '../game/cardSizes';
 import type { CardInstance } from '../game/types';
 import { useGame } from '../store/gameStore';
-import { getEffectiveHandCost, computeOngoing, effectivePower } from '../game/abilities';
+import { getEffectiveCost, computeOngoing, effectivePower } from '../game/abilities';
 import { aresDisplayPower, isAresCard } from '../game/aresInferno';
 import { CardView } from './CardView';
 
@@ -132,7 +132,7 @@ function HandCard({
   const displayPower = isAresCard(card.defId)
     ? aresDisplayPower(card, state)
     : effectivePower(card, ongoing);
-  const effectiveCost = getEffectiveHandCost(state, 'player', def.cost);
+  const effectiveCost = getEffectiveCost(card, state, 'player');
   const affordable = !disabled && effectiveCost <= cosmos;
   const useDrag = !touchPlay && affordable;
 
