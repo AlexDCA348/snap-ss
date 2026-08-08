@@ -460,7 +460,7 @@ function LaneCardZone({
                     isRelocating ? 'opacity-0 pointer-events-none' : 'opacity-100',
                   ].join(' ')}
                 >
-                  <CardSlot
+                    <CardSlot
                     key={card.uid}
                     card={card}
                     state={state}
@@ -471,6 +471,7 @@ function LaneCardZone({
                     laneSilenced={laneSilenced}
                     effectOverflow
                     protectedByLane={isProtected(state, card, laneIndex)}
+                    winningHere={winning}
                     onClick={() => onInspect(card.uid)}
                   />
                 </div>
@@ -638,6 +639,7 @@ function CardSlot({
   laneSilenced = false,
   effectOverflow = false,
   protectedByLane = false,
+  winningHere = false,
   onClick,
 }: {
   card: CardInstance;
@@ -650,6 +652,7 @@ function CardSlot({
   laneSilenced?: boolean;
   effectOverflow?: boolean;
   protectedByLane?: boolean;
+  winningHere?: boolean;
   onClick?: () => void;
 }) {
   const viewerId: PlayerId = 'player';
@@ -665,6 +668,12 @@ function CardSlot({
     presentation?.displayPower ?? effectivePower(card, ongoing);
   const displayDef = getCardDef(displayDefId ?? card.defId);
   const powerDelta = displayPower - displayDef.power;
+  const nachiClaws =
+    !faceDown &&
+    !laneSilenced &&
+    !card.silenced &&
+    card.defId === 'nachi' &&
+    winningHere;
 
   return (
     <motion.div
@@ -698,6 +707,13 @@ function CardSlot({
         animateCardEffects={false}
         onClick={onClick}
       />
+      {nachiClaws ? (
+        <div className="nachi-claws" aria-hidden>
+          <span className="nachi-claws__slash nachi-claws__slash--a" />
+          <span className="nachi-claws__slash nachi-claws__slash--b" />
+          <span className="nachi-claws__slash nachi-claws__slash--c" />
+        </div>
+      ) : null}
       {protectedByLane && !faceDown ? (
         <div
           aria-label="Protégé"

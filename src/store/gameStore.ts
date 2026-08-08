@@ -92,6 +92,11 @@ import {
   ANDROMEDA_RELOCATE_MS,
   type AndromedaRelocateBurst,
 } from '../game/andromedaRelocate';
+import {
+  collectBlackPegasusCostBursts,
+  BLACK_PEGASUS_COST_MS,
+  type BlackPegasusCostBurst,
+} from '../game/blackPegasusCost';
 import { buildRevealTimeline } from '../game/revealVfx';
 import type { GameState, LocationIndex, PlayerId } from '../game/types';
 
@@ -137,6 +142,8 @@ interface GameStore {
   danteChainBursts: DanteChainBurst[];
   /** Île d'Andromède — déplacement vers un autre lieu au révélé. */
   andromedaRelocateBursts: AndromedaRelocateBurst[];
+  /** Pégase Noir — +coût main adverse au révélé. */
+  blackPegasusCostBursts: BlackPegasusCostBurst[];
   /** When set, the detail modal shows the card instance with this uid. */
   inspectedUid: string | null;
   /** When set, the detail modal shows this lane's location effect. */
@@ -171,6 +178,7 @@ export const useGame = create<GameStore>((set, get) => ({
   capellaDiskBursts: [],
   danteChainBursts: [],
   andromedaRelocateBursts: [],
+  blackPegasusCostBursts: [],
   matchSerial: 0,
   inspectedUid: null,
   inspectedLane: null,
@@ -201,6 +209,7 @@ export const useGame = create<GameStore>((set, get) => ({
       capellaDiskBursts: [],
       danteChainBursts: [],
       andromedaRelocateBursts: [],
+      blackPegasusCostBursts: [],
       inspectedUid: null,
       inspectedLane: null,
     }));
@@ -237,6 +246,7 @@ export const useGame = create<GameStore>((set, get) => ({
       capellaDiskBursts: [],
       danteChainBursts: [],
       andromedaRelocateBursts: [],
+      blackPegasusCostBursts: [],
     });
     // Run AI in a microtask so the "thinking" indicator shows up.
     setTimeout(() => {
@@ -262,6 +272,7 @@ export const useGame = create<GameStore>((set, get) => ({
       const capellaBursts = collectCapellaRevealDisks(afterAi, afterReveal);
       const danteBursts = collectDanteRevealChains(afterAi, afterReveal);
       const andromedaBursts = collectAndromedaRelocateBursts(afterAi, afterReveal);
+      const blackPegasusBursts = collectBlackPegasusCostBursts(afterAi, afterReveal);
 
       const clearBurst = (sourceUid: string, durationMs: number) => {
         setTimeout(() => {
@@ -314,6 +325,9 @@ export const useGame = create<GameStore>((set, get) => ({
             andromedaRelocateBursts: prev.andromedaRelocateBursts.filter(
               (b) => b.sourceUid !== sourceUid,
             ),
+            blackPegasusCostBursts: prev.blackPegasusCostBursts.filter(
+              (b) => b.sourceUid !== sourceUid,
+            ),
           }));
         }, durationMs);
       };
@@ -350,6 +364,9 @@ export const useGame = create<GameStore>((set, get) => ({
         const stepAndromeda = frame.andromedaRelocatePreview
           ? andromedaBursts.filter((b) => b.sourceUid === frame.uid)
           : [];
+        const stepBlackPegasus = blackPegasusBursts.filter(
+          (b) => b.sourceUid === frame.uid,
+        );
         const hasEffect =
           stepPtolemy.length +
             stepMilo.length +
@@ -364,7 +381,8 @@ export const useGame = create<GameStore>((set, get) => ({
             stepHyoga.length +
             stepSaga.length +
             stepCapella.length +
-            stepDante.length >
+            stepDante.length +
+            stepBlackPegasus.length >
           0;
 
         const at = elapsed;
@@ -385,6 +403,10 @@ export const useGame = create<GameStore>((set, get) => ({
             sagaDuplicateBursts: [...prev.sagaDuplicateBursts, ...stepSaga],
             capellaDiskBursts: [...prev.capellaDiskBursts, ...stepCapella],
             danteChainBursts: [...prev.danteChainBursts, ...stepDante],
+            blackPegasusCostBursts: [
+              ...prev.blackPegasusCostBursts,
+              ...stepBlackPegasus,
+            ],
             andromedaRelocateBursts: frame.andromedaRelocatePreview
               ? [...prev.andromedaRelocateBursts, ...stepAndromeda]
               : prev.andromedaRelocateBursts.filter(
@@ -412,6 +434,7 @@ export const useGame = create<GameStore>((set, get) => ({
           if (stepCapella.length) clearBurst(frame.uid, CAPELLA_DISKS_MS);
           if (stepDante.length) clearBurst(frame.uid, DANTE_CHAIN_MS);
           if (stepAndromeda.length) clearBurst(frame.uid, ANDROMEDA_RELOCATE_MS);
+          if (stepBlackPegasus.length) clearBurst(frame.uid, BLACK_PEGASUS_COST_MS);
         }, at);
 
         elapsed += REVEAL_STEP_MS;

@@ -4,7 +4,7 @@ import { getCardDef } from '../game/cards';
 import { handCardSize } from '../game/cardSizes';
 import type { CardInstance } from '../game/types';
 import { useGame } from '../store/gameStore';
-import { getHandDeckCostReduction, computeOngoing, effectivePower } from '../game/abilities';
+import { getEffectiveCost, computeOngoing, effectivePower } from '../game/abilities';
 import { aresDisplayPower, isAresCard } from '../game/aresInferno';
 import { CardView } from './CardView';
 
@@ -43,8 +43,6 @@ export function Hand({
   onPointerDownCard,
 }: Props) {
   const inspectCard = useGame((s) => s.inspectCard);
-  const state = useGame((s) => s.state);
-  const reduction = getHandDeckCostReduction(state, 'player');
   const cardSize = handCardSize(compact, mini);
 
   return (
@@ -69,7 +67,6 @@ export function Hand({
             card={card}
             cardSize={cardSize}
             cosmos={cosmos}
-            reduction={reduction}
             disabled={disabled}
             holoDisabled={holoDisabled}
             hideCost={hideCost}
@@ -96,7 +93,6 @@ function HandCard({
   card,
   cardSize,
   cosmos,
-  reduction,
   disabled,
   holoDisabled,
   hideCost,
@@ -111,7 +107,6 @@ function HandCard({
   card: CardInstance;
   cardSize: ReturnType<typeof handCardSize>;
   cosmos: number;
-  reduction: number;
   disabled?: boolean;
   holoDisabled?: boolean;
   hideCost?: boolean;
@@ -132,7 +127,7 @@ function HandCard({
   const displayPower = isAresCard(card.defId)
     ? aresDisplayPower(card, state)
     : effectivePower(card, ongoing);
-  const effectiveCost = Math.max(0, def.cost - reduction);
+  const effectiveCost = getEffectiveCost(card, state, 'player');
   const affordable = !disabled && effectiveCost <= cosmos;
   const useDrag = !touchPlay && affordable;
 

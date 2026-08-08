@@ -4,6 +4,8 @@ import type { AthenaRippleSource } from '../game/athenaWave';
 
 interface Props {
   sources: AthenaRippleSource[];
+  /** Mobile : moins d’anneaux, même esthétique dorée. */
+  compact?: boolean;
 }
 
 interface RippleCenter {
@@ -13,7 +15,8 @@ interface RippleCenter {
   maxScale: number;
 }
 
-const RING_COUNT = 3;
+const RING_COUNT_DESKTOP = 3;
+const RING_COUNT_COMPACT = 1;
 const RING_BASE_PX = 52;
 const RING_STAGGER_S = 2.8;
 
@@ -53,8 +56,9 @@ function measureSources(sources: AthenaRippleSource[]): RippleCenter[] {
 }
 
 /** Ripples dorés qui partent de la carte Athéna et se propagent en continu. */
-export function AthenaRippleOverlay({ sources }: Props) {
+export function AthenaRippleOverlay({ sources, compact = false }: Props) {
   const [centers, setCenters] = useState<RippleCenter[]>([]);
+  const ringCount = compact ? RING_COUNT_COMPACT : RING_COUNT_DESKTOP;
   const sourceKey = useMemo(
     () => sources.map((s) => s.uid).join('|'),
     [sources],
@@ -110,11 +114,19 @@ export function AthenaRippleOverlay({ sources }: Props) {
           animate={{ opacity: 0.55 }}
           exit={{ opacity: 0 }}
         >
-          <span className="athena-ripple__core" />
-          {Array.from({ length: RING_COUNT }, (_, i) => (
+          <span
+            className={[
+              'athena-ripple__core',
+              compact ? 'athena-ripple__core--lite' : '',
+            ].join(' ')}
+          />
+          {Array.from({ length: ringCount }, (_, i) => (
             <span
               key={i}
-              className="athena-ripple__ring"
+              className={[
+                'athena-ripple__ring',
+                compact ? 'athena-ripple__ring--lite' : '',
+              ].join(' ')}
               style={{ animationDelay: `${i * RING_STAGGER_S}s` }}
             />
           ))}
