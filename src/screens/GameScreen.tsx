@@ -12,6 +12,7 @@ import { AndromedaRelocateOverlay } from '../components/AndromedaRelocateOverlay
 import { ShuraSummonOverlay } from '../components/ShuraSummonOverlay';
 import { SiriusBloomOverlay } from '../components/SiriusBloomOverlay';
 import { BlackPegasusCostOverlay } from '../components/BlackPegasusCostOverlay';
+import { SagittariusArmorMergeOverlay } from '../components/SagittariusArmorMergeOverlay';
 import { DanteChainOverlay } from '../components/DanteChainOverlay';
 import { ShiryuDragonCometOverlay } from '../components/ShiryuDragonCometOverlay';
 import { IkkiPhoenixOverlay } from '../components/IkkiPhoenixOverlay';
@@ -48,6 +49,9 @@ export function GameScreen() {
   const shuraSummonBursts = useGame((s) => s.shuraSummonBursts);
   const siriusBloomBursts = useGame((s) => s.siriusBloomBursts);
   const blackPegasusCostBursts = useGame((s) => s.blackPegasusCostBursts);
+  const sagittariusArmorMergeBursts = useGame(
+    (s) => s.sagittariusArmorMergeBursts,
+  );
   const danteChainBursts = useGame((s) => s.danteChainBursts);
   const shiryuDragonBursts = useGame((s) => s.shiryuDragonBursts);
   const matchSerial = useGame((s) => s.matchSerial);
@@ -241,6 +245,10 @@ export function GameScreen() {
       <ShuraSummonOverlay bursts={shuraSummonBursts} compact={compact} />
       <SiriusBloomOverlay bursts={siriusBloomBursts} compact={compact} />
       <BlackPegasusCostOverlay bursts={blackPegasusCostBursts} compact={compact} />
+      <SagittariusArmorMergeOverlay
+        bursts={sagittariusArmorMergeBursts}
+        compact={compact}
+      />
       <DanteChainOverlay bursts={danteChainBursts} compact={compact} />
       <ShiryuDragonCometOverlay bursts={shiryuDragonBursts} compact={compact} />
       <VictoryRewardModal
