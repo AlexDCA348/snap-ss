@@ -1,6 +1,7 @@
 import { getCardDef } from '../game/cards';
 import { CHAPTER_BY_ID } from './config/chapters';
-import { getFragmentLabel } from './config/fragmentTypes';
+import { buildFragmentId, getFragmentLabel } from './config/fragmentTypes';
+import { STAR_DUST_CRAFT_COST } from './config/starDust';
 import { ARMOR_CATALOG } from './data/armorCatalog';
 import { getArmorProgress, getFragmentQuantity } from './services/ArmorCollectionService';
 import { isCardUnlocked } from './services/CardCollectionService';
@@ -18,6 +19,8 @@ export interface FragmentSlotViewModel {
   label: string;
   owned: boolean;
   quantity: number;
+  /** Id catalogue `{armorId}:{type}` — pour le craft. */
+  fragmentId: string;
 }
 
 export interface ArmorViewModel {
@@ -36,6 +39,9 @@ export interface ArmorViewModel {
 
 export interface ArmorDetailViewModel extends ArmorViewModel {
   missingFragments: FragmentSlotViewModel[];
+  starDust: number;
+  craftCost: number;
+  canCraft: boolean;
 }
 
 const RARITY_LABELS: Record<FragmentRarity, string> = {
@@ -59,7 +65,8 @@ function buildFragmentSlots(
       type,
       label: getFragmentLabel(type),
       owned: quantity >= 1,
-      quantity,
+      quantity: quantity >= 1 ? 1 : 0,
+      fragmentId: buildFragmentId(armor.id, type),
     };
   });
 }
@@ -99,8 +106,12 @@ export function buildArmorDetailViewModel(
   if (!armor) return null;
 
   const base = buildArmorViewModel(armor, collection);
+  const starDust = collection.starDust ?? 0;
   return {
     ...base,
     missingFragments: base.fragments.filter((f) => !f.owned),
+    starDust,
+    craftCost: STAR_DUST_CRAFT_COST,
+    canCraft: starDust >= STAR_DUST_CRAFT_COST,
   };
 }

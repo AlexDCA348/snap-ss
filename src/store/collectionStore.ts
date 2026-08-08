@@ -3,11 +3,13 @@ import { persist } from 'zustand/middleware';
 import { ARMOR_CATALOG } from '../collection/data/armorCatalog';
 import { grantVictoryReward } from '../collection/services/RewardService';
 import {
+  COLLECTION_SCHEMA_VERSION,
   COLLECTION_STORAGE_KEY,
   createDefaultCollection,
   hydrateCollectionState,
   serializeCollectionState,
 } from '../collection/services/SaveService';
+import { craftFragment } from '../collection/services/ArmorCollectionService';
 import { ensureCollectionConsistency } from '../collection/services/CardCollectionService';
 import { syncUnlockedChapters } from '../collection/services/ChapterProgressService';
 import {
@@ -24,8 +26,12 @@ interface CollectionStore {
   collection: PlayerCollection;
   pendingReward: Reward | null;
   lastRewardedMatchSerial: number;
+  /** Message court après un craft (succès / échec). */
+  craftFeedback: string | null;
   grantVictoryRewardForMatch: (matchSerial: number) => Reward | null;
   dismissPendingReward: () => void;
+  craftMissingFragment: (fragmentId: string) => boolean;
+  clearCraftFeedback: () => void;
   getArmorViewModels: () => ArmorViewModel[];
   getArmorDetail: (armorId: string) => ArmorDetailViewModel | null;
 }
@@ -36,6 +42,7 @@ export const useCollectionStore = create<CollectionStore>()(
       collection: createDefaultCollection(),
       pendingReward: null,
       lastRewardedMatchSerial: -1,
+      craftFeedback: null,
 
       grantVictoryRewardForMatch: (matchSerial) => {
         if (matchSerial < 0) return null;
@@ -54,6 +61,26 @@ export const useCollectionStore = create<CollectionStore>()(
 
       dismissPendingReward: () => set({ pendingReward: null }),
 
+      craftMissingFragment: (fragmentId) => {
+        const result = craftFragment(get().collection, ARMOR_CATALOG, fragmentId);
+        if (!result.ok) {
+          set({ craftFeedback: result.reason });
+          return false;
+        }
+
+        const chapterSync = syncUnlockedChapters(result.collection, ARMOR_CATALOG);
+        const cardName = result.justCompletedArmor
+          ? ` Armure complète — carte débloquée !`
+          : '';
+        set({
+          collection: chapterSync.collection,
+          craftFeedback: `Pièce forgée.${cardName}`,
+        });
+        return true;
+      },
+
+      clearCraftFeedback: () => set({ craftFeedback: null }),
+
       getArmorViewModels: () => buildArmorViewModels(get().collection),
 
       getArmorDetail: (armorId) => buildArmorDetailViewModel(armorId, get().collection),
@@ -62,7 +89,7 @@ export const useCollectionStore = create<CollectionStore>()(
       name: COLLECTION_STORAGE_KEY,
       partialize: (state) =>
         serializeCollectionState({
-          version: 1,
+          version: COLLECTION_SCHEMA_VERSION,
           collection: state.collection,
           lastRewardedMatchSerial: state.lastRewardedMatchSerial,
         }),
@@ -73,6 +100,7 @@ export const useCollectionStore = create<CollectionStore>()(
           collection: hydrated.collection,
           lastRewardedMatchSerial: hydrated.lastRewardedMatchSerial,
           pendingReward: null,
+          craftFeedback: null,
         };
       },
       onRehydrateStorage: () => (state) => {

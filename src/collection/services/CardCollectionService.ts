@@ -1,7 +1,10 @@
 import { getBuildableCardDefs } from '../../game/buildableCards';
 import { STARTER_CARD_ID_SET } from '../config/starterCards';
 import type { ArmorCatalog, PlayerCollection } from '../types';
-import { recomputeUnlockedCards } from './ArmorCollectionService';
+import {
+  normalizeStarDustCollection,
+  recomputeUnlockedCards,
+} from './ArmorCollectionService';
 
 export function isCardUnlocked(
   cardId: string,
@@ -30,8 +33,12 @@ export function ensureCollectionConsistency(
   collection: PlayerCollection,
   catalog: ArmorCatalog,
 ): PlayerCollection {
-  return {
+  const normalized = normalizeStarDustCollection({
     ...collection,
-    unlockedCards: recomputeUnlockedCards(collection, catalog),
+    starDust: collection.starDust ?? 0,
+  });
+  return {
+    ...normalized,
+    unlockedCards: recomputeUnlockedCards(normalized, catalog),
   };
 }

@@ -6,6 +6,7 @@ import type { ChapterId } from '../collection/types';
 import { ArmorDetailModal } from '../components/collection/ArmorDetailModal';
 import { ChapterStepTabs } from '../components/collection/ChapterStepTabs';
 import { CollectionArmorRow } from '../components/collection/CollectionArmorRow';
+import { StarDustBadge } from '../components/collection/StarDustBadge';
 import { MainMenuBackground } from '../components/menu/MainMenuBackground';
 import { useMiniPhone } from '../hooks/useMiniPhone';
 import { useAppStore } from '../store/appStore';
@@ -16,8 +17,8 @@ export function ArmoryScreen() {
   const goToMenu = useAppStore((s) => s.goToMenu);
   const collection = useCollectionStore((s) => s.collection);
   const getArmorViewModels = useCollectionStore((s) => s.getArmorViewModels);
-  const getArmorDetail = useCollectionStore((s) => s.getArmorDetail);
   const mini = useMiniPhone();
+  const starDust = collection.starDust ?? 0;
   const featuredChapterId = useMemo(
     () => getFeaturedCampaignChapterId(collection),
     [collection],
@@ -38,8 +39,6 @@ export function ArmoryScreen() {
       ),
     [armors, activeChapterId],
   );
-
-  const detail = selectedArmorId ? getArmorDetail(selectedArmorId) : null;
 
   useEffect(() => {
     setActiveChapterId(armoryChapterId ?? featuredChapterId);
@@ -64,6 +63,14 @@ export function ArmoryScreen() {
       />
 
       <div className={['max-w-lg mx-auto px-4 md:px-8', mini ? 'mt-3' : 'mt-5'].join(' ')}>
+        <div className="flex items-center justify-between gap-3 mb-3 px-1">
+          <p className="text-[11px] text-ui-muted leading-snug">
+            Les doublons deviennent de la{' '}
+            <span className="text-amber-200/90">Poussière d&apos;Étoiles</span>
+            {' '}— forgez les pièces manquantes.
+          </p>
+          <StarDustBadge amount={starDust} />
+        </div>
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -88,7 +95,10 @@ export function ArmoryScreen() {
       </div>
       </div>
 
-      <ArmorDetailModal detail={detail} onClose={() => setSelectedArmorId(null)} />
+      <ArmorDetailModal
+        armorId={selectedArmorId}
+        onClose={() => setSelectedArmorId(null)}
+      />
 
       <div className="collection-screen__dock fixed bottom-0 inset-x-0 z-20 safe-area-pb pointer-events-none">
         <div

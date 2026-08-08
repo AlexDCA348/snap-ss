@@ -34,7 +34,13 @@ export interface ArmorFragmentDefinition {
 }
 
 export interface PlayerCollection {
+  /**
+   * Possession des fragments (0 ou 1 après normalisation).
+   * Les anciens stacks > 1 sont convertis en `starDust` à l'hydratation.
+   */
   ownedFragments: Record<string, number>;
+  /** Poussière d'Étoiles — monnaie craft universelle (ex-doublons). */
+  starDust: number;
   unlockedCards: string[];
   unlockedChapterIds: ChapterId[];
 }
@@ -42,6 +48,8 @@ export interface PlayerCollection {
 export interface Reward {
   fragment: ArmorFragmentDefinition;
   isNew: boolean;
+  /** > 0 si le drop était un doublon converti en Poussière d'Étoiles. */
+  starDustGained: number;
   completedArmor: ArmorDefinition | null;
   unlockedCardId: string | null;
   newlyUnlockedChapters: ChapterId[];
@@ -57,8 +65,20 @@ export interface ArmorProgress {
 export interface FragmentGrantResult {
   collection: PlayerCollection;
   isNew: boolean;
+  starDustGained: number;
   justCompletedArmor: ArmorDefinition | null;
 }
+
+export type CraftFragmentResult =
+  | {
+      ok: true;
+      collection: PlayerCollection;
+      justCompletedArmor: ArmorDefinition | null;
+    }
+  | {
+      ok: false;
+      reason: string;
+    };
 
 export interface ArmorCatalog {
   armors: ArmorDefinition[];

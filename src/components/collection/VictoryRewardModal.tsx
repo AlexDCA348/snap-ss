@@ -93,7 +93,9 @@ export function VictoryRewardModal({ reward, onDismiss }: Props) {
               {reward.isNew ? (
                 <p className="text-xs text-emerald-300/90 mt-2">Nouveau fragment</p>
               ) : (
-                <p className="text-xs text-ui-muted mt-2">Doublon (collection mise à jour)</p>
+                <p className="text-xs text-amber-200/90 mt-2">
+                  Doublon → +{reward.starDustGained || 1} Poussière d&apos;Étoiles
+                </p>
               )}
             </>
           ) : (

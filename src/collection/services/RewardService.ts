@@ -86,6 +86,7 @@ export function grantVictoryReward(
     reward: {
       fragment,
       isNew: grant.isNew,
+      starDustGained: grant.starDustGained,
       completedArmor: grant.justCompletedArmor,
       unlockedCardId: grant.justCompletedArmor?.unlockedCardId ?? null,
       newlyUnlockedChapters: chapterSync.newlyUnlocked,
