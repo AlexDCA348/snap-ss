@@ -32,6 +32,11 @@ const CARD_SEARCH_NAMES = {
   dokko: ['Dohko', 'Libra Dohko'],
   roshi: ['Old Master', 'Roshi', 'Dohko Old Master'],
   aiolos: ['Aioros', 'Sagittarius Aiolos'],
+  'sagittarius-armor': [
+    'Sagittarius Cloth',
+    'Sagittarius Gold Cloth',
+    'Cloth of Sagittarius',
+  ],
   aphrodite: ['Aphrodite', 'Pisces Aphrodite'],
   kiki: ['Kiki'],
   shura: ['Shura', 'Capricorn Shura'],

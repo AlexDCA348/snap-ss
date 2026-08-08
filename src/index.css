@@ -2781,6 +2781,69 @@ a {
   pointer-events: none;
 }
 
+
+/* Armure du Sagittaire — shards dorés + halo (léger) */
+.sagittarius-merge__shard {
+  position: fixed;
+  width: 12px;
+  height: 18px;
+  margin-left: -6px;
+  margin-top: -9px;
+  border-radius: 3px 3px 8px 8px;
+  background: linear-gradient(
+    160deg,
+    rgba(254, 243, 199, 0.95) 0%,
+    rgba(251, 191, 36, 0.9) 45%,
+    rgba(180, 83, 9, 0.75) 100%
+  );
+  box-shadow: 0 0 6px rgba(251, 191, 36, 0.55);
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.sagittarius-merge__halo {
+  position: fixed;
+  width: 56px;
+  height: 56px;
+  margin-left: -28px;
+  margin-top: -28px;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    rgba(254, 243, 199, 0.55) 0%,
+    rgba(251, 191, 36, 0.28) 40%,
+    transparent 70%
+  );
+  box-shadow: 0 0 14px rgba(251, 191, 36, 0.4);
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+@media (max-width: 767px) {
+  .sagittarius-merge__shard {
+    width: 9px;
+    height: 14px;
+    margin-left: -4.5px;
+    margin-top: -7px;
+    box-shadow: 0 0 4px rgba(251, 191, 36, 0.4);
+  }
+
+  .sagittarius-merge__halo {
+    width: 44px;
+    height: 44px;
+    margin-left: -22px;
+    margin-top: -22px;
+    box-shadow: 0 0 8px rgba(251, 191, 36, 0.3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sagittarius-merge__shard,
+  .sagittarius-merge__halo {
+    animation: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .athena-ripple__ring,
   .athena-ripple__core {

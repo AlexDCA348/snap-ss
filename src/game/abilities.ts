@@ -886,6 +886,62 @@ const ON_REVEAL: Record<string, OnRevealHandler> = {
     };
   },
 
+  /**
+   * Armure du Sagittaire — fusionne avec un autre allié ici :
+   * +N à sa puissance initiale, puis l’armure disparaît.
+   */
+  'sagittarius-armor-merge-buff': (state, source, lane) => {
+    const def = getCardDef(source.defId);
+    const amount = (def.ability?.params?.amount as number) ?? 5;
+    const allies = state.lanes[lane].cards[source.ownerId].filter(
+      (c) => c.uid !== source.uid,
+    );
+    if (allies.length === 0) {
+      return {
+        ...state,
+        log: [
+          ...state.log,
+          {
+            turn: state.turn,
+            text: `${def.name} n’a aucune carte alliée ici pour fusionner.`,
+          },
+        ],
+      };
+    }
+
+    const target = allies[Math.floor(Math.random() * allies.length)]!;
+    const targetDef = getCardDef(target.defId);
+    const initialPower = targetDef.power;
+    const nextBase = initialPower + amount;
+
+    let next = adjustLanePower(
+      state,
+      lane,
+      source.ownerId,
+      nextBase - target.basePower,
+      (c) => c.uid === target.uid,
+    );
+    next = {
+      ...next,
+      log: [
+        ...next.log,
+        {
+          turn: state.turn,
+          text: `${def.name} fusionne avec ${targetDef.name} (${initialPower} → ${nextBase}).`,
+        },
+      ],
+    };
+
+    // L’armure est consumée par la fusion (ignore la protection).
+    return destroyAtLaneForced(
+      next,
+      lane,
+      source.ownerId,
+      (c) => c.uid === source.uid,
+      source,
+    ).state;
+  },
+
   /** Cygnus Noir — +2 cosmos next turn, then self-destructs. */
   'cygnus-noir-cosmos-then-selfdestruct': (state, source, lane) => {
     const p = state.players[source.ownerId];

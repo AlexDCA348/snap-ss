@@ -60,6 +60,7 @@ export const DECK_PRESETS: DeckPreset[] = [
           'aphrodite',
           'aiolia',
           'aiolos',
+          'sagittarius-armor',
           'deathmask',
           'shura',
           'milo',
@@ -125,6 +126,7 @@ export const DECK_PRESETS: DeckPreset[] = [
       {
         ids: [
           'aiolos',
+          'sagittarius-armor',
           'shura',
           'milo',
           'ikki',
