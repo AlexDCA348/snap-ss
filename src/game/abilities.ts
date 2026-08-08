@@ -886,6 +886,62 @@ const ON_REVEAL: Record<string, OnRevealHandler> = {
     };
   },
 
+  /**
+   * Armure du Sagittaire — fusionne avec un autre allié ici :
+   * +N à sa puissance initiale, puis l’armure disparaît.
+   */
+  'sagittarius-armor-merge-buff': (state, source, lane) => {
+    const def = getCardDef(source.defId);
+    const amount = (def.ability?.params?.amount as number) ?? 5;
+    const allies = state.lanes[lane].cards[source.ownerId].filter(
+      (c) => c.uid !== source.uid,
+    );
+    if (allies.length === 0) {
+      return {
+        ...state,
+        log: [
+          ...state.log,
+          {
+            turn: state.turn,
+            text: `${def.name} n’a aucune carte alliée ici pour fusionner.`,
+          },
+        ],
+      };
+    }
+
+    const target = allies[Math.floor(Math.random() * allies.length)]!;
+    const targetDef = getCardDef(target.defId);
+    const initialPower = targetDef.power;
+    const nextBase = initialPower + amount;
+
+    let next = adjustLanePower(
+      state,
+      lane,
+      source.ownerId,
+      nextBase - target.basePower,
+      (c) => c.uid === target.uid,
+    );
+    next = {
+      ...next,
+      log: [
+        ...next.log,
+        {
+          turn: state.turn,
+          text: `${def.name} fusionne avec ${targetDef.name} (${initialPower} → ${nextBase}).`,
+        },
+      ],
+    };
+
+    // L’armure est consumée par la fusion (ignore la protection).
+    return destroyAtLaneForced(
+      next,
+      lane,
+      source.ownerId,
+      (c) => c.uid === source.uid,
+      source,
+    ).state;
+  },
+
   /** Cygnus Noir — +2 cosmos next turn, then self-destructs. */
   'cygnus-noir-cosmos-then-selfdestruct': (state, source, lane) => {
     const p = state.players[source.ownerId];
@@ -981,6 +1037,16 @@ export interface OngoingResult {
   modifiers: Record<string, number>;
   /** Multiplicateur de puissance effective (défaut 1). Ex. Saga ×2 alliés. */
   multipliers: Record<string, number>;
+  /** Bonus de puissance de lieu (ex. Andromède Noir +3 aux adjacents). */
+  laneBonuses: Array<Record<PlayerId, number>>;
+}
+
+function emptyLaneBonuses(): Array<Record<PlayerId, number>> {
+  return [
+    { player: 0, ai: 0 },
+    { player: 0, ai: 0 },
+    { player: 0, ai: 0 },
+  ];
 }
 
 /** Puissance affichée / utilisée pour les comparaisons (continus additifs puis ×). */
@@ -1131,17 +1197,11 @@ const ONGOING: Record<string, OngoingHandler> = {
     return out;
   },
 
-  /** Andromède Noir — +1 on self per Black Knight in play (including self). */
-  'ongoing-andromede-noir-per-black': (state, source) => {
-    let count = 0;
-    for (const l of [0, 1, 2] as LocationIndex[]) {
-      for (const c of state.lanes[l].cards[source.ownerId]) {
-        if (getCardDef(c.defId).faction === 'black') count += 1;
-      }
-    }
-    if (count === 0) return {};
-    return { [source.uid]: count };
-  },
+  /**
+   * Andromède Noir — bonus de lieu géré via LANE_ONGOING
+   * (`ongoing-buff-adjacent-lanes`).
+   */
+  'ongoing-buff-adjacent-lanes': () => ({}),
 
   // Flag-based abilities: handled by `isProtected` / `computeOngoing` gating.
   // Registered as no-ops so they appear in the registry & ability text.
@@ -1169,6 +1229,50 @@ const ONGOING: Record<string, OngoingHandler> = {
  * lane membership.
  */
 const MULTIPLY_ONGOING = new Set(['ongoing-double-allies-here']);
+const LANE_BONUS_ONGOING = new Set(['ongoing-buff-adjacent-lanes']);
+
+type LaneOngoingHandler = (
+  state: GameState,
+  source: CardInstance,
+  lane: LocationIndex,
+) => Partial<Record<LocationIndex, number>>;
+
+/** Effets continus qui ajoutent de la puissance à un lieu (pas à une carte). */
+const LANE_ONGOING: Record<string, LaneOngoingHandler> = {
+  /** Andromède Noir — +N à chaque lieu adjacent (côté propriétaire). */
+  'ongoing-buff-adjacent-lanes': (_state, source, lane) => {
+    const def = getCardDef(source.defId);
+    const amount = (def.ability?.params?.amount as number) ?? 3;
+    const out: Partial<Record<LocationIndex, number>> = {};
+    for (const l of [0, 1, 2] as LocationIndex[]) {
+      if (Math.abs(l - lane) === 1) out[l] = amount;
+    }
+    return out;
+  },
+};
+
+/** Applique un bonus de lieu émis par une carte source. */
+function applyLaneOngoingFromSource(
+  state: GameState,
+  source: CardInstance,
+  lane: LocationIndex,
+  laneBonuses: Array<Record<PlayerId, number>>,
+  silencedLanes: Set<LocationIndex>,
+): void {
+  const def = getCardDef(source.defId);
+  if (!def.ability || def.ability.kind !== 'ongoing') return;
+  const handler = LANE_ONGOING[def.ability.id];
+  if (!handler) return;
+  if (source.silenced || silencedLanes.has(lane)) return;
+  const partial = handler(state, source, lane);
+  for (const [laneKey, amount] of Object.entries(partial)) {
+    if (!amount) continue;
+    const targetLane = Number(laneKey) as LocationIndex;
+    const bucket = laneBonuses[targetLane];
+    if (!bucket) continue;
+    bucket[source.ownerId] += amount;
+  }
+}
 
 /** Applique l'effet continu d'une carte source (additif ou multiplicateur). */
 function applyOngoingFromSource(
@@ -1182,6 +1286,7 @@ function applyOngoingFromSource(
 ): void {
   const def = getCardDef(source.defId);
   if (!def.ability || def.ability.kind !== 'ongoing') return;
+  if (LANE_BONUS_ONGOING.has(def.ability.id)) return;
   const isSilencer = def.ability.id === 'ongoing-silence-lane';
   if (!isSilencer) {
     if (source.silenced) return;
@@ -1219,6 +1324,7 @@ function applySanctuaryDoubleOngoing(
   silencedLanes: Set<LocationIndex>,
   modifiers: Record<string, number>,
   multipliers: Record<string, number>,
+  laneBonuses: Array<Record<PlayerId, number>>,
   uidIndex: Map<string, { card: CardInstance; lane: LocationIndex }>,
 ): void {
   for (const l of [0, 1, 2] as LocationIndex[]) {
@@ -1227,6 +1333,10 @@ function applySanctuaryDoubleOngoing(
     for (const c of all) {
       const def = getCardDef(c.defId);
       if (!def.ability || def.ability.kind !== 'ongoing') continue;
+      if (LANE_BONUS_ONGOING.has(def.ability.id)) {
+        applyLaneOngoingFromSource(state, c, l, laneBonuses, silencedLanes);
+        continue;
+      }
       const isSilencer = def.ability.id === 'ongoing-silence-lane';
       if (!isSilencer) {
         if (c.silenced) continue;
@@ -1258,6 +1368,7 @@ function applySanctuaryDoubleOngoing(
 export function computeOngoing(state: GameState): OngoingResult {
   const modifiers: Record<string, number> = {};
   const multipliers: Record<string, number> = {};
+  const laneBonuses = emptyLaneBonuses();
   const uidIndex = new Map<string, { card: CardInstance; lane: LocationIndex }>();
   for (const l of [0, 1, 2] as LocationIndex[]) {
     for (const c of [...state.lanes[l].cards.player, ...state.lanes[l].cards.ai]) {
@@ -1298,6 +1409,7 @@ export function computeOngoing(state: GameState): OngoingResult {
         uidIndex,
         silencedLanes,
       );
+      applyLaneOngoingFromSource(state, c, l, laneBonuses, silencedLanes);
     }
   }
   const locMods = applyLocationOngoingModifiers(state, silencedLanes);
@@ -1315,10 +1427,17 @@ export function computeOngoing(state: GameState): OngoingResult {
     silencedLanes,
     modifiers,
     multipliers,
+    laneBonuses,
     uidIndex,
   );
-  applyWinningLaneBonuses(state, modifiers, multipliers, silencedLanes);
-  return { modifiers, multipliers };
+  applyWinningLaneBonuses(
+    state,
+    modifiers,
+    multipliers,
+    laneBonuses,
+    silencedLanes,
+  );
+  return { modifiers, multipliers, laneBonuses };
 }
 
 /**
@@ -1329,9 +1448,10 @@ function applyWinningLaneBonuses(
   state: GameState,
   modifiers: Record<string, number>,
   multipliers: Record<string, number>,
+  laneBonuses: Array<Record<PlayerId, number>>,
   silencedLanes: Set<LocationIndex>,
 ): void {
-  const ongoing = { modifiers, multipliers };
+  const ongoing = { modifiers, multipliers, laneBonuses };
   for (const l of [0, 1, 2] as LocationIndex[]) {
     if (silencedLanes.has(l)) continue;
     const powers: Record<PlayerId, number> = { player: 0, ai: 0 };
@@ -1339,6 +1459,7 @@ function applyWinningLaneBonuses(
       for (const c of state.lanes[l].cards[side]) {
         powers[side] += scoringPower(state, c, ongoing);
       }
+      powers[side] += laneBonuses[l]?.[side] ?? 0;
     }
     for (const side of ['player', 'ai'] as PlayerId[]) {
       if (powers[side] <= powers[otherPlayer(side)]) continue;

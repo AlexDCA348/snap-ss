@@ -2781,10 +2781,136 @@ a {
   pointer-events: none;
 }
 
+
+/* Armure du Sagittaire — shards dorés + halo (léger) */
+.sagittarius-merge__shard {
+  position: fixed;
+  width: 12px;
+  height: 18px;
+  margin-left: -6px;
+  margin-top: -9px;
+  border-radius: 3px 3px 8px 8px;
+  background: linear-gradient(
+    160deg,
+    rgba(254, 243, 199, 0.95) 0%,
+    rgba(251, 191, 36, 0.9) 45%,
+    rgba(180, 83, 9, 0.75) 100%
+  );
+  box-shadow: 0 0 6px rgba(251, 191, 36, 0.55);
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.sagittarius-merge__halo {
+  position: fixed;
+  width: 56px;
+  height: 56px;
+  margin-left: -28px;
+  margin-top: -28px;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    rgba(254, 243, 199, 0.55) 0%,
+    rgba(251, 191, 36, 0.28) 40%,
+    transparent 70%
+  );
+  box-shadow: 0 0 14px rgba(251, 191, 36, 0.4);
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+@media (max-width: 767px) {
+  .sagittarius-merge__shard {
+    width: 9px;
+    height: 14px;
+    margin-left: -4.5px;
+    margin-top: -7px;
+    box-shadow: 0 0 4px rgba(251, 191, 36, 0.4);
+  }
+
+  .sagittarius-merge__halo {
+    width: 44px;
+    height: 44px;
+    margin-left: -22px;
+    margin-top: -22px;
+    box-shadow: 0 0 8px rgba(251, 191, 36, 0.3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sagittarius-merge__shard,
+  .sagittarius-merge__halo {
+    animation: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .athena-ripple__ring,
   .athena-ripple__core {
     animation: none;
+  }
+}
+
+/* Andromède Noir — lianes courbes persistantes (révélée) */
+.black-andromeda-vines__stem {
+  stroke: rgba(168, 85, 247, 0.88);
+  filter: drop-shadow(0 0 3px rgba(88, 28, 135, 0.75));
+}
+
+.black-andromeda-vines__glow {
+  stroke: rgba(126, 34, 206, 0.35);
+  filter: blur(2px);
+}
+
+.black-andromeda-vines__tip {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  margin-top: -5px;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    rgba(233, 213, 255, 0.9) 0%,
+    rgba(147, 51, 234, 0.55) 45%,
+    transparent 72%
+  );
+  box-shadow: 0 0 8px rgba(147, 51, 234, 0.45);
+  pointer-events: none;
+  animation: blackAndromedaTipPulse 2.8s ease-in-out infinite;
+}
+
+@keyframes blackAndromedaTipPulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.15);
+  }
+}
+
+@media (max-width: 767px) {
+  .black-andromeda-vines__glow {
+    filter: blur(1px);
+  }
+
+  .black-andromeda-vines__tip {
+    width: 8px;
+    height: 8px;
+    margin-left: -4px;
+    margin-top: -4px;
+    box-shadow: 0 0 5px rgba(147, 51, 234, 0.35);
+    animation-duration: 3.4s;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .black-andromeda-vines__tip {
+    animation: none;
+    opacity: 0.75;
   }
 }
 

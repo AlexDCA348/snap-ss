@@ -166,19 +166,6 @@ export const CARDS: CardDefinition[] = [
     },
   },
   {
-    id: 'black-andromeda',
-    name: 'Andromède Noir',
-    cost: 1,
-    power: 1,
-    faction: 'black',
-    flavor: 'Chaînes des ténèbres.',
-    ability: {
-      kind: 'ongoing',
-      id: 'ongoing-andromede-noir-per-black',
-      text: 'Continu : +1 pour chaque Chevalier Noir en jeu.',
-    },
-  },
-  {
     id: 'black-phoenix',
     name: 'Phénix Noir',
     cost: 1,
@@ -405,6 +392,20 @@ export const CARDS: CardDefinition[] = [
     },
   },
   {
+    id: 'black-andromeda',
+    name: 'Andromède Noir',
+    cost: 3,
+    power: 1,
+    faction: 'black',
+    flavor: 'Chaînes des ténèbres.',
+    ability: {
+      kind: 'ongoing',
+      id: 'ongoing-buff-adjacent-lanes',
+      text: 'Continu : +3 aux lieux adjacents.',
+      params: { amount: 3 },
+    },
+  },
+  {
     id: 'black-dragon',
     name: 'Dragon Noir',
     cost: 2,
@@ -544,6 +545,20 @@ export const CARDS: CardDefinition[] = [
       kind: 'on-reveal',
       id: 'destroy-strongest-enemy-here',
       text: 'Au révélé : détruit la carte ennemie la plus forte ici.',
+    },
+  },
+  {
+    id: 'sagittarius-armor',
+    name: 'Armure du Sagittaire',
+    cost: 3,
+    power: 5,
+    faction: 'gold',
+    flavor: 'Le drapé d’or du centaure.',
+    ability: {
+      kind: 'on-reveal',
+      id: 'sagittarius-armor-merge-buff',
+      text: 'Au révélé : fusionne avec une autre carte ici, lui donnant +5 à sa puissance initiale.',
+      params: { amount: 5 },
     },
   },
   {
