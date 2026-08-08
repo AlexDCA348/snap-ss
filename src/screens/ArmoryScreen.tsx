@@ -67,7 +67,7 @@ export function ArmoryScreen() {
           <p className="text-[11px] text-ui-muted leading-snug">
             Les doublons deviennent de la{' '}
             <span className="text-amber-200/90">Poussière d&apos;Étoiles</span>
-            {' '}— forgez les pièces manquantes.
+            {' '}— forge : 20 / Argent 40 / Or 80.
           </p>
           <StarDustBadge amount={starDust} />
         </div>

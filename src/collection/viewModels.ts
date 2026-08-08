@@ -1,7 +1,7 @@
 import { getCardDef } from '../game/cards';
 import { CHAPTER_BY_ID } from './config/chapters';
 import { buildFragmentId, getFragmentLabel } from './config/fragmentTypes';
-import { STAR_DUST_CRAFT_COST } from './config/starDust';
+import { getStarDustCraftCost } from './config/starDust';
 import { ARMOR_CATALOG } from './data/armorCatalog';
 import { getArmorProgress, getFragmentQuantity } from './services/ArmorCollectionService';
 import { isCardUnlocked } from './services/CardCollectionService';
@@ -107,11 +107,12 @@ export function buildArmorDetailViewModel(
 
   const base = buildArmorViewModel(armor, collection);
   const starDust = collection.starDust ?? 0;
+  const craftCost = getStarDustCraftCost(armor.chapterId);
   return {
     ...base,
     missingFragments: base.fragments.filter((f) => !f.owned),
     starDust,
-    craftCost: STAR_DUST_CRAFT_COST,
-    canCraft: starDust >= STAR_DUST_CRAFT_COST,
+    craftCost,
+    canCraft: starDust >= craftCost,
   };
 }

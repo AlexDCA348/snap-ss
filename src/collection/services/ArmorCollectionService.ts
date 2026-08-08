@@ -1,5 +1,8 @@
 import { STARTER_CARD_IDS } from '../config/starterCards';
-import { STAR_DUST_CRAFT_COST, STAR_DUST_FROM_DUPLICATE } from '../config/starDust';
+import {
+  getStarDustCraftCost,
+  STAR_DUST_FROM_DUPLICATE,
+} from '../config/starDust';
 import type {
   ArmorCatalog,
   ArmorDefinition,
@@ -155,7 +158,7 @@ export function craftFragment(
   collection: PlayerCollection,
   catalog: ArmorCatalog,
   fragmentId: string,
-  cost: number = STAR_DUST_CRAFT_COST,
+  costOverride?: number,
 ): CraftFragmentResult {
   const fragment = catalog.byFragmentId.get(fragmentId);
   if (!fragment) {
@@ -171,6 +174,7 @@ export function craftFragment(
     return { ok: false, reason: 'Cette pièce est déjà possédée.' };
   }
 
+  const cost = costOverride ?? getStarDustCraftCost(armor.chapterId);
   const dust = collection.starDust ?? 0;
   if (dust < cost) {
     return {
