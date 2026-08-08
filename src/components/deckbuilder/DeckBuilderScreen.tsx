@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { validateDeck } from '../../game/deckPool';
+import { useMiniPhone } from '../../hooks/useMiniPhone';
 import { useAppStore } from '../../store/appStore';
 import { useDeckStore } from '../../store/deckStore';
 import { NavButton } from '../menu/NavButton';
@@ -50,6 +51,7 @@ export function DeckBuilderScreen() {
   const setActiveSlot = useDeckStore((s) => s.setActiveSlot);
   const editingSlotIndex = useDeckStore((s) => s.editingSlotIndex);
   const activeSlotIndex = useDeckStore((s) => s.activeSlotIndex);
+  const mini = useMiniPhone();
 
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [inspectedDefId, setInspectedDefId] = useState<string | null>(null);
@@ -72,13 +74,20 @@ export function DeckBuilderScreen() {
 
   return (
     <div className="deck-builder fixed inset-0 flex flex-col bg-gradient-to-b from-shadow-900 via-cosmos-900/95 to-shadow-950">
-      <header className="deck-builder__header shrink-0 px-4 pt-4 pb-1">
+      <header
+        className={[
+          'deck-builder__header shrink-0 px-4',
+          mini
+            ? 'pt-[max(0.75rem,env(safe-area-inset-top))] pb-1'
+            : 'pt-[max(1rem,env(safe-area-inset-top))] pb-1',
+        ].join(' ')}
+      >
         <h1 className="display-font text-base sm:text-lg text-gold-400 tracking-[0.16em] uppercase">
           Deck Builder
         </h1>
       </header>
 
-      <div className="deck-builder__tabs shrink-0 px-4 pb-2">
+      <div className={['deck-builder__tabs shrink-0 px-4', mini ? 'pb-1' : 'pb-2'].join(' ')}>
         <DeckSlotTabs />
       </div>
 
@@ -97,8 +106,13 @@ export function DeckBuilderScreen() {
         }}
       />
 
-      <main className="deck-builder__main flex-1 min-h-0 flex flex-col px-4 pb-3 safe-area-pb">
-        <div className="flex items-center justify-between gap-2 mb-2">
+      <main
+        className={[
+          'deck-builder__main flex-1 min-h-0 flex flex-col px-4 safe-area-pb',
+          mini ? 'pb-2' : 'pb-3',
+        ].join(' ')}
+      >
+        <div className={['flex items-center justify-between gap-2', mini ? 'mb-1' : 'mb-2'].join(' ')}>
           <p className="text-[10px] uppercase tracking-widest text-ui-muted">
             Votre deck · {editingDeck.cardIds.length}/12
           </p>
@@ -111,7 +125,12 @@ export function DeckBuilderScreen() {
           )}
         </div>
 
-        <div className="deck-builder__cards flex-1 min-h-0 flex flex-col py-2 overflow-hidden">
+        <div
+          className={[
+            'deck-builder__cards flex-1 min-h-0 flex flex-col overflow-hidden',
+            mini ? 'py-1' : 'py-2',
+          ].join(' ')}
+        >
           <DeckList
             cardIds={editingDeck.cardIds}
             onRemove={removeCard}
@@ -123,7 +142,10 @@ export function DeckBuilderScreen() {
             <button
               type="button"
               onClick={openLibrary}
-              className="mt-3 mx-auto flex items-center gap-2 px-5 py-2 rounded-full text-xs ring-1 ring-gold-400/45 bg-gold-500/15 text-gold-100 hover:bg-gold-500/25 transition shrink-0"
+              className={[
+                'mx-auto flex items-center gap-2 px-5 py-2 rounded-full text-xs ring-1 ring-gold-400/45 bg-gold-500/15 text-gold-100 hover:bg-gold-500/25 transition shrink-0',
+                mini ? 'mt-2' : 'mt-3',
+              ].join(' ')}
             >
               <span className="text-base leading-none">+</span>
               Ajouter une carte
@@ -131,7 +153,14 @@ export function DeckBuilderScreen() {
           ) : null}
         </div>
 
-        <div className="deck-builder__actions shrink-0 flex items-end justify-center gap-10 sm:gap-16 pt-4 pb-1">
+        <div
+          className={[
+            'deck-builder__actions shrink-0 flex items-end justify-center gap-10 sm:gap-16',
+            mini
+              ? 'pt-2 pb-[max(0.25rem,env(safe-area-inset-bottom))]'
+              : 'pt-4 pb-[max(0.25rem,env(safe-area-inset-bottom))]',
+          ].join(' ')}
+        >
           <NavButton
             label="Retour"
             icon={<BackIcon />}

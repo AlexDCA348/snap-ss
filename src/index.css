@@ -2765,6 +2765,170 @@ button {
   pointer-events: none;
 }
 
+/* Guilty — sacrifice démoniaque (révélé uniquement) */
+.guilty-sacrifice__glow {
+  position: absolute;
+  width: 92px;
+  height: 92px;
+  margin-left: -46px;
+  margin-top: -46px;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 80, 60, 0.95) 0%,
+    rgba(127, 29, 29, 0.55) 42%,
+    transparent 72%
+  );
+  box-shadow: 0 0 28px rgba(220, 38, 38, 0.75);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.guilty-sacrifice__flames {
+  position: absolute;
+  inset: -8% -6% -4%;
+  border-radius: 18px;
+  background:
+    radial-gradient(ellipse at 20% 110%, rgba(0, 0, 0, 0.92) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 115%, rgba(40, 0, 0, 0.85) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 100%, rgba(127, 29, 29, 0.55) 0%, transparent 60%);
+  filter: blur(4px);
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  transform-origin: bottom center;
+}
+
+.guilty-sacrifice__flames--ember {
+  mix-blend-mode: screen;
+  background:
+    radial-gradient(ellipse at 30% 90%, rgba(239, 68, 68, 0.45) 0%, transparent 45%),
+    radial-gradient(ellipse at 70% 95%, rgba(185, 28, 28, 0.4) 0%, transparent 48%);
+  filter: blur(8px);
+}
+
+.guilty-sacrifice__mask {
+  position: absolute;
+  width: min(160px, 58%);
+  height: auto;
+  aspect-ratio: 2 / 3;
+  margin-left: -12%;
+  margin-top: -38%;
+  object-fit: cover;
+  object-position: center 20%;
+  border-radius: 12px;
+  filter: contrast(1.25) brightness(0.85) saturate(0.2)
+    drop-shadow(0 0 18px rgba(220, 38, 38, 0.65));
+  mix-blend-mode: soft-light;
+  opacity: 0.7;
+  pointer-events: none;
+  mask-image: radial-gradient(ellipse at center, #000 40%, transparent 78%);
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 40%, transparent 78%);
+}
+
+.guilty-sacrifice__mask-fallback {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  margin-left: -60px;
+  margin-top: -60px;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    rgba(254, 202, 202, 0.5) 0%,
+    rgba(127, 29, 29, 0.45) 45%,
+    transparent 72%
+  );
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+.guilty-sacrifice__aura {
+  position: absolute;
+  width: 64px;
+  height: 84px;
+  margin-left: -32px;
+  margin-top: -42px;
+  border-radius: 12px;
+  border: 2px solid rgba(248, 113, 113, 0.85);
+  box-shadow:
+    0 0 16px rgba(220, 38, 38, 0.75),
+    inset 0 0 18px rgba(239, 68, 68, 0.45);
+  pointer-events: none;
+}
+
+.guilty-sacrifice__blast {
+  position: absolute;
+  width: 72px;
+  height: 72px;
+  margin-left: -36px;
+  margin-top: -36px;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(239, 68, 68, 0.7) 32%,
+    rgba(69, 10, 10, 0.35) 58%,
+    transparent 76%
+  );
+  filter: blur(1.5px);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.guilty-sacrifice__spark {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  margin-top: -5px;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    #fff7ed 0%,
+    #f97316 45%,
+    #7f1d1d 100%
+  );
+  box-shadow: 0 0 10px rgba(251, 146, 60, 0.95);
+  pointer-events: none;
+}
+
+.guilty-sacrifice__power {
+  position: absolute;
+  margin-left: -1.6rem;
+  margin-top: -1.1rem;
+  min-width: 3.2rem;
+  text-align: center;
+  font-family: 'Cinzel', 'Palatino Linotype', Palatino, serif;
+  font-size: clamp(1.35rem, 4.2vw, 1.85rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #fecaca;
+  text-shadow:
+    0 0 10px rgba(220, 38, 38, 0.95),
+    0 0 22px rgba(127, 29, 29, 0.8),
+    0 2px 0 rgba(0, 0, 0, 0.65);
+  pointer-events: none;
+}
+
+.guilty-sacrifice__finale {
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  margin-left: -70px;
+  margin-top: -70px;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(251, 146, 60, 0.55) 28%,
+    rgba(185, 28, 28, 0.35) 52%,
+    transparent 74%
+  );
+  filter: blur(3px);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
 /* Dante — chaîne du Cerbère (révélé uniquement) */
 .dante-chain__source-spin {
   position: fixed;
@@ -4908,6 +5072,201 @@ button {
   pointer-events: none;
 }
 
+/* —— Shura summon (carte tirée depuis la main) —— */
+.shura-summon__ripple {
+  position: fixed;
+  width: 72px;
+  height: 72px;
+  margin-left: -36px;
+  margin-top: -36px;
+  border-radius: 999px;
+  border: 2px solid rgba(251, 191, 36, 0.55);
+  box-shadow: 0 0 18px rgba(245, 158, 11, 0.35);
+  pointer-events: none;
+}
+
+.shura-summon__flying-wrap {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.shura-summon__card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.55),
+    0 0 22px rgba(251, 191, 36, 0.35);
+}
+
+.shura-summon__card-art {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.shura-summon__card-fallback {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(160deg, #3f2a0a, #1c1408);
+  color: #fbbf24;
+  font-size: 1.4rem;
+}
+
+.shura-summon__card-frame {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 12px rgba(251, 191, 36, 0.28);
+  pointer-events: none;
+}
+
+.shura-summon__card-glow {
+  position: absolute;
+  inset: -8%;
+  border-radius: inherit;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(252, 211, 77, 0.4) 0%,
+    transparent 72%
+  );
+  filter: blur(8px);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.shura-summon__splash {
+  position: fixed;
+  width: 110px;
+  height: 110px;
+  margin-left: -55px;
+  margin-top: -55px;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    rgba(253, 230, 138, 0.5) 0%,
+    rgba(245, 158, 11, 0.28) 38%,
+    rgba(69, 26, 3, 0.12) 68%,
+    transparent 78%
+  );
+  filter: blur(5px);
+  pointer-events: none;
+}
+
+/* —— Sirius / cosmos bloom (blob rose ou bleu vers le deck) —— */
+.sirius-bloom__core {
+  position: fixed;
+  width: 34px;
+  height: 34px;
+  margin-left: -17px;
+  margin-top: -17px;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle at 35% 30%,
+    #fff7fb 0%,
+    #f9a8d4 28%,
+    #ec4899 62%,
+    rgba(157, 23, 77, 0.15) 100%
+  );
+  box-shadow:
+    0 0 18px rgba(244, 114, 182, 0.85),
+    0 0 36px rgba(236, 72, 153, 0.45);
+  pointer-events: none;
+}
+
+.sirius-bloom__core--blue {
+  background: radial-gradient(
+    circle at 35% 30%,
+    #f5fbff 0%,
+    #7dd3fc 28%,
+    #2563eb 62%,
+    rgba(30, 64, 175, 0.15) 100%
+  );
+  box-shadow:
+    0 0 18px rgba(96, 165, 250, 0.85),
+    0 0 36px rgba(37, 99, 235, 0.45);
+}
+
+.sirius-bloom__halo {
+  position: fixed;
+  width: 64px;
+  height: 64px;
+  margin-left: -32px;
+  margin-top: -32px;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    rgba(251, 207, 232, 0.55) 0%,
+    rgba(244, 114, 182, 0.28) 45%,
+    transparent 72%
+  );
+  filter: blur(6px);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.sirius-bloom__halo--blue {
+  background: radial-gradient(
+    circle,
+    rgba(186, 230, 253, 0.55) 0%,
+    rgba(96, 165, 250, 0.28) 45%,
+    transparent 72%
+  );
+}
+
+.sirius-bloom__spark {
+  position: fixed;
+  width: 54px;
+  height: 54px;
+  margin-left: -27px;
+  margin-top: -27px;
+  border-radius: 999px;
+  border: 2px solid rgba(251, 207, 232, 0.7);
+  box-shadow: 0 0 16px rgba(236, 72, 153, 0.55);
+  pointer-events: none;
+}
+
+.sirius-bloom__spark--blue {
+  border-color: rgba(186, 230, 253, 0.7);
+  box-shadow: 0 0 16px rgba(37, 99, 235, 0.55);
+}
+
+.sirius-bloom__impact {
+  position: fixed;
+  width: 78px;
+  height: 78px;
+  margin-left: -39px;
+  margin-top: -39px;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.75) 0%,
+    rgba(244, 114, 182, 0.45) 35%,
+    rgba(190, 24, 93, 0.12) 65%,
+    transparent 78%
+  );
+  filter: blur(3px);
+  pointer-events: none;
+}
+
+.sirius-bloom__impact--blue {
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.75) 0%,
+    rgba(96, 165, 250, 0.45) 35%,
+    rgba(30, 64, 175, 0.12) 65%,
+    transparent 78%
+  );
+}
+
 @media (prefers-reduced-motion: reduce) {
   .andromeda-relocate__trail,
   .andromeda-relocate__card-glow {
@@ -4923,38 +5282,113 @@ button {
 .deck-list {
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  height: 100%;
 }
 
+/* Mobile : 4×3 — cellules plus hautes, moins d’écart horizontal. */
 .deck-list__grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-template-rows: repeat(4, minmax(0, 1fr));
-  gap: 0.5rem 0.65rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: 0.4rem 0.35rem;
   height: 100%;
   min-height: 0;
   align-content: stretch;
-  justify-items: center;
+  justify-items: stretch;
   padding: 0.125rem 0;
 }
 
+/* Très petit écran : 3×4 compact. */
+@media (max-width: 379px) {
+  .deck-list__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: repeat(4, minmax(0, 1fr));
+    gap: 0.35rem 0.3rem;
+  }
+}
+
+/* Tablette+ : 6×2 — ratio cellule ≈ ratio carte. */
 @media (min-width: 640px) {
   .deck-list__grid {
-    gap: 0.65rem 0.85rem;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem 0.5rem;
   }
 }
 
 .deck-list__slot {
+  container-type: size;
   overflow: visible;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
   width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Remplit la cellule en conservant le ratio carte (~52×72). */
+.deck-list__card-shell {
+  aspect-ratio: 52 / 72;
+  width: min(100cqw, calc(100cqh * 52 / 72));
+  height: min(100cqh, calc(100cqw * 72 / 52));
+  max-width: 100%;
   max-height: 100%;
 }
 
-.deck-list__slot .card-view {
+.deck-list__card-shell .card-view-root {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.deck-list__add {
+  aspect-ratio: 52 / 72;
+  width: min(100cqw, calc(100cqh * 52 / 72));
+  height: min(100cqh, calc(100cqw * 72 / 52));
+  max-width: 100%;
   max-height: 100%;
-  width: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  border: 2px dashed rgba(212, 175, 55, 0.35);
+  background: rgba(0, 0, 0, 0.25);
+  color: rgba(234, 210, 140, 0.5);
+  font-size: 1.5rem;
+  line-height: 1;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.deck-list__add:hover:not(:disabled) {
+  border-color: rgba(212, 175, 55, 0.55);
+  background: rgba(212, 175, 55, 0.1);
+  color: rgba(250, 230, 180, 0.8);
+}
+
+.deck-list__add:disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+/* Fallback sans container queries : hauteur pleine, largeur via ratio. */
+@supports not (width: 1cqw) {
+  .deck-list__card-shell,
+  .deck-list__add {
+    width: auto;
+    height: 100%;
+    max-width: 100%;
+  }
+
+  .deck-list__card-shell .card-view-root {
+    width: auto !important;
+    height: 100% !important;
+    max-width: 100%;
+    aspect-ratio: 52 / 72;
+  }
 }
 
 .deck-tabs {
@@ -4975,6 +5409,50 @@ button {
 
 .deck-library-modal__grid {
   grid-auto-rows: minmax(0, auto);
+}
+
+.deck-library-modal__slot {
+  width: 100%;
+}
+
+.deck-library-modal__card {
+  width: 100%;
+  aspect-ratio: 52 / 72;
+}
+
+.deck-library-modal__card .card-view-root {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.progress-backup__btn {
+  min-width: 5.5rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(220, 230, 255, 0.88);
+  background: rgba(8, 12, 28, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.progress-backup__btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #fff;
+}
+
+.progress-backup__btn:disabled {
+  opacity: 0.45;
+  pointer-events: none;
 }
 
 .safe-area-pb {
@@ -5058,10 +5536,6 @@ button {
 
 .main-menu {
   isolation: isolate;
-}
-
-.main-menu__logo-img {
-  mix-blend-mode: screen;
 }
 
 .campaign-slider__label {

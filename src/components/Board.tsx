@@ -43,7 +43,12 @@ export function Board({
   }, [quakeKey]);
 
   return (
-    <>
+    <div className="relative w-full h-full min-h-0 flex-1 flex flex-col">
+      <div
+        data-deck-zone="ai"
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-1 w-8 h-8 opacity-0 z-0"
+      />
       <div
         className={[
           'grid grid-cols-3 w-full min-w-0 board-grid h-full min-h-0 flex-1',
@@ -74,6 +79,6 @@ export function Board({
       })}
       </div>
       <AthenaRippleOverlay sources={athenaSources} />
-    </>
+    </div>
   );
 }

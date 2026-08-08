@@ -1,11 +1,14 @@
 import {
   ANDROMEDA_ISLAND_EFFECT_ID,
+  applyLocationOnCardRevealed,
   resolveAndromedaRevealThenRelocate,
   resolveRevealedCardOnLane,
 } from './locationEffects';
+import { resolveShuraRevealThenDestroy } from './abilities';
 import { getRevealOrder } from './engine';
 import { appendRevealedToSide } from './laneRules';
 import type { CardInstance, GameState, LocationIndex, PlayerId } from './types';
+import { SHURA_DEF_ID } from './shuraBlade';
 
 export interface RevealVfxStep {
   pending: CardInstance;
@@ -38,6 +41,10 @@ export interface RevealFrame {
   uid: string;
   /** Carte sur l'Île d'Andromède après au révélé, avant le déplacement. */
   andromedaRelocatePreview?: boolean;
+  /** Shura : invocation en vol (carte tirée encore masquée sur le lieu). */
+  shuraSummonPreview?: boolean;
+  /** Shura : carte adverse placée, destruction Excalibur à venir. */
+  shuraDestroyPreview?: boolean;
 }
 
 function laneForCard(
@@ -125,6 +132,113 @@ export function buildRevealTimeline(
         const isAndromeda =
           stateBeforeEffect.locations[lane]?.effect?.id ===
           ANDROMEDA_ISLAND_EFFECT_ID;
+
+        // Shura avant Andromède : la carte invoquée reste sur l'île ;
+        // seul Shura est ensuite déplacé par l'effet de lieu.
+        if (pending.defId === SHURA_DEF_ID) {
+          const onLane = stateBeforeEffect.lanes[lane].cards[pid].find(
+            (c) => c.uid === pending.uid,
+          );
+          if (!onLane) {
+            s = resolveRevealedCardOnLane(
+              stateBeforeEffect,
+              lane,
+              pending.uid,
+              pid,
+            );
+            frames.push({
+              state: s,
+              side: pid,
+              lane,
+              uid: pending.uid,
+            });
+            continue;
+          }
+
+          const { afterPlace, afterEffect, final, destroyedUid, placedUid } =
+            resolveShuraRevealThenDestroy(stateBeforeEffect, onLane, lane);
+
+          // 1) Shura se révèle.
+          frames.push({
+            state: stateBeforeEffect,
+            side: pid,
+            lane,
+            uid: pending.uid,
+          });
+
+          if (placedUid) {
+            // 2) La carte adverse vole depuis la main / deck vers le lieu.
+            frames.push({
+              state: afterPlace,
+              side: pid,
+              lane,
+              uid: pending.uid,
+              shuraSummonPreview: true,
+            });
+
+            // 3) La carte invoquée se révèle et joue son effet.
+            frames.push({
+              state: afterEffect,
+              side: pid,
+              lane,
+              uid: pending.uid,
+            });
+
+            if (destroyedUid) {
+              // 4) Excalibur (carte encore visible).
+              frames.push({
+                state: afterEffect,
+                side: pid,
+                lane,
+                uid: pending.uid,
+                shuraDestroyPreview: true,
+              });
+              // 5) Destruction résolue.
+              frames.push({
+                state: final,
+                side: pid,
+                lane,
+                uid: pending.uid,
+              });
+            }
+          } else {
+            frames.push({
+              state: final,
+              side: pid,
+              lane,
+              uid: pending.uid,
+            });
+          }
+
+          if (isAndromeda) {
+            const relocated = applyLocationOnCardRevealed(
+              final,
+              lane,
+              pid,
+              pending.uid,
+            );
+            const willRelocate = relocated.lane !== lane;
+            if (willRelocate) {
+              frames.push({
+                state: final,
+                side: pid,
+                lane,
+                uid: pending.uid,
+                andromedaRelocatePreview: true,
+              });
+              frames.push({
+                state: relocated.state,
+                side: pid,
+                lane: relocated.lane,
+                uid: pending.uid,
+              });
+            }
+            s = relocated.state;
+          } else {
+            s = final;
+          }
+          continue;
+        }
 
         if (isAndromeda) {
           const postPos = laneForCard(postReveal, pending.uid);

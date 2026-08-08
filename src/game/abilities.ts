@@ -71,6 +71,53 @@ const ON_REVEAL: Record<string, OnRevealHandler> = {
     };
   },
 
+  /** Sirius — +N permanent à la carte au-dessus du deck. */
+  'sirius-buff-top-deck': (state, source, _lane) => {
+    const side = source.ownerId;
+    const player = state.players[side];
+    if (player.deck.length === 0) {
+      const name = getCardDef(source.defId).name;
+      return {
+        ...state,
+        log: [
+          ...state.log,
+          {
+            turn: state.turn,
+            text: `${name} : le deck est vide.`,
+          },
+        ],
+      };
+    }
+
+    const def = getCardDef(source.defId);
+    const amount = (def.ability?.params?.amount as number) ?? 3;
+    const [top, ...rest] = player.deck;
+    const buffed: CardInstance = {
+      ...top,
+      basePower: top.basePower + amount,
+    };
+    const topName = getCardDef(top.defId).name;
+    const sourceName = def.name;
+
+    return {
+      ...state,
+      players: {
+        ...state.players,
+        [side]: {
+          ...player,
+          deck: [buffed, ...rest],
+        },
+      },
+      log: [
+        ...state.log,
+        {
+          turn: state.turn,
+          text: `${sourceName} : +${amount} à ${topName} (dessus du deck).`,
+        },
+      ],
+    };
+  },
+
   /** Nachi — if you're already winning here, +2 to self; otherwise +1. */
   'nachi-buff-based-on-winning': (state, source, lane) => {
     const power = lanePowerSnapshot(state, lane);
@@ -104,28 +151,68 @@ const ON_REVEAL: Record<string, OnRevealHandler> = {
     return next;
   },
 
-  /** Moses — si un allié a été détruit cette partie, +N à lui-même. */
-  'moses-buff-if-ally-died': (state, source, lane) => {
-    if (state.graveyard[source.ownerId].length === 0) return state;
-    const def = getCardDef(source.defId);
-    const amount = (def.ability?.params?.amount as number) ?? 2;
-    const next = adjustLanePower(
-      state,
-      lane,
-      source.ownerId,
-      amount,
-      (c) => c.uid === source.uid,
-    );
-    return {
+  /** Moses — ajoute la carte du dessus du deck ici et joue son Au révélé. */
+  'moses-place-top-deck-here': (state, source, lane) => {
+    const side = source.ownerId;
+    const name = getCardDef(source.defId).name;
+    const player = state.players[side];
+
+    if (player.deck.length === 0) {
+      return {
+        ...state,
+        log: [
+          ...state.log,
+          {
+            turn: state.turn,
+            text: `${name} : le deck est vide.`,
+          },
+        ],
+      };
+    }
+
+    if (!canAddRevealedToSide(state, lane, side)) {
+      return {
+        ...state,
+        log: [
+          ...state.log,
+          {
+            turn: state.turn,
+            text: `${name} : plus de place ici.`,
+          },
+        ],
+      };
+    }
+
+    const [top, ...rest] = player.deck;
+    const placed: CardInstance = {
+      ...top,
+      revealed: true,
+      playedTurn: state.turn,
+      silenced: false,
+    };
+    const topName = getCardDef(top.defId).name;
+
+    let next: GameState = {
+      ...state,
+      players: {
+        ...state.players,
+        [side]: { ...player, deck: rest },
+      },
+    };
+    next = appendRevealedToSide(next, lane, side, placed);
+
+    next = {
       ...next,
       log: [
         ...next.log,
         {
-          turn: next.turn,
-          text: `${def.name} gagne +${amount} (allié détruit).`,
+          turn: state.turn,
+          text: `${name} ajoute ${topName} depuis le deck ici.`,
         },
       ],
     };
+
+    return applyPulledCardOnReveal(next, lane, placed.uid);
   },
 
   /** Ptolemy — -3 to the weakest enemy here (permanent). */
@@ -228,6 +315,58 @@ const ON_REVEAL: Record<string, OnRevealHandler> = {
     };
   },
 
+  /**
+   * Guilty — détruit les autres alliés ici, puis absorbe la somme de leurs
+   * puissances (calculée avant destruction). Guilty n’est jamais ciblé.
+   */
+  'guilty-sacrifice-allies-absorb': (state, source, lane) => {
+    const side = source.ownerId;
+    const allies = state.lanes[lane].cards[side].filter(
+      (c) => c.uid !== source.uid,
+    );
+    if (allies.length === 0) return state;
+
+    const powerBefore = new Map(
+      allies.map((c) => [c.uid, currentPower(state, c)] as const),
+    );
+
+    const { state: afterDestroy, destroyed } = destroyAtLane(
+      state,
+      lane,
+      side,
+      (c) => c.uid !== source.uid,
+      source,
+    );
+    if (destroyed.length === 0) return afterDestroy;
+
+    const gained = destroyed.reduce(
+      (sum, card) => sum + (powerBefore.get(card.uid) ?? 0),
+      0,
+    );
+
+    const guilty = afterDestroy.lanes[lane].cards[side].find(
+      (c) => c.uid === source.uid,
+    );
+    if (!guilty) return afterDestroy;
+
+    const next = updateCardInLane(afterDestroy, lane, side, source.uid, {
+      ...guilty,
+      basePower: guilty.basePower + gained,
+    });
+
+    const def = getCardDef(source.defId);
+    return {
+      ...next,
+      log: [
+        ...next.log,
+        {
+          turn: next.turn,
+          text: `${def.name} consume ${destroyed.length} allié(s) : +${gained} pwr.`,
+        },
+      ],
+    };
+  },
+
   /** Dante — détruit toutes les cartes de coût 1 (alliés et ennemis) sur tous les lieux. */
   'dante-destroy-cost-1-all-lanes': (state, source, lane) => {
     void lane;
@@ -258,34 +397,6 @@ const ON_REVEAL: Record<string, OnRevealHandler> = {
         {
           turn: next.turn,
           text: `${name} enchaîne ${total} carte(s) de coût 1 sur le plateau.`,
-        },
-      ],
-    };
-  },
-
-  /** Dragon Noir — invoque un double sans effet ici (au révélé). */
-  'black-dragon-summon-double': (state, source, lane) => {
-    if (!canAddRevealedToSide(state, lane, source.ownerId)) return state;
-    const def = getCardDef(source.defId);
-    const tokenId =
-      (def.ability?.params?.tokenId as string) ?? 'black-dragon-double';
-    const tokenDef = getCardDef(tokenId);
-    const token: CardInstance = {
-      uid: `t${Math.random().toString(16).slice(2)}`,
-      defId: tokenId,
-      ownerId: source.ownerId,
-      basePower: tokenDef.power,
-      revealed: true,
-      playedTurn: state.turn,
-    };
-    const next = appendRevealedToSide(state, lane, source.ownerId, token);
-    return {
-      ...next,
-      log: [
-        ...next.log,
-        {
-          turn: next.turn,
-          text: `${def.name} invoque un double.`,
         },
       ],
     };
@@ -390,18 +501,59 @@ const ON_REVEAL: Record<string, OnRevealHandler> = {
     };
   },
 
-  /** Orphée — if losing this lane, bounce a random enemy here to hand. */
-  'orphee-bounce-enemy-if-losing': (state, source, lane) => {
-    const power = lanePowerSnapshot(state, lane);
-    const losing = power[source.ownerId] < power[otherPlayer(source.ownerId)];
-    if (!losing) return state;
-    const enemy = otherPlayer(source.ownerId);
-    const bouncable = state.lanes[lane].cards[enemy].filter(
-      (c) => !isIndestructible(state, c, lane),
+  /** Orphée — la carte alliée la plus faible ici change de côté. */
+  'orphee-switch-weakest-here': (state, source, lane) => {
+    const from = source.ownerId;
+    const to = otherPlayer(from);
+    const allies = state.lanes[lane].cards[from].filter(
+      (c) => c.uid !== source.uid,
     );
-    if (bouncable.length === 0) return state;
-    const target = bouncable[Math.floor(Math.random() * bouncable.length)];
-    return bounceFromLaneToHand(state, lane, enemy, target.uid, source);
+    if (allies.length === 0) return state;
+
+    let weakest = allies[0];
+    let weakestPower = currentPower(state, weakest);
+    for (const card of allies.slice(1)) {
+      const power = currentPower(state, card);
+      if (power < weakestPower) {
+        weakest = card;
+        weakestPower = power;
+      }
+    }
+
+    if (!canAddRevealedToSide(state, lane, to)) {
+      const name = getCardDef(source.defId).name;
+      return {
+        ...state,
+        log: [
+          ...state.log,
+          {
+            turn: state.turn,
+            text: `${name} : le côté adverse est plein, impossible de changer ${getCardDef(weakest.defId).name} de côté.`,
+          },
+        ],
+      };
+    }
+
+    const transferred: CardInstance = {
+      ...weakest,
+      ownerId: to,
+    };
+
+    let next = removeRevealedFromSide(state, lane, from, weakest.uid);
+    next = appendRevealedToSide(next, lane, to, transferred);
+
+    const name = getCardDef(source.defId).name;
+    const targetName = getCardDef(weakest.defId).name;
+    return {
+      ...next,
+      log: [
+        ...next.log,
+        {
+          turn: next.turn,
+          text: `${name} : ${targetName} (${weakestPower}) change de côté.`,
+        },
+      ],
+    };
   },
 
   /** Kiki — grants +1 cosmos next turn to the owner. */
@@ -526,31 +678,9 @@ const ON_REVEAL: Record<string, OnRevealHandler> = {
     };
   },
 
-  /** Shura — détruit les cartes ennemies ≥ N pwr sur CE LIEU (ignore la protection). */
-  'shura-destroy-power-ge10': (state, source, lane) => {
-    const def = getCardDef(source.defId);
-    const minPower = (def.ability?.params?.minPower as number) ?? 6;
-    const enemy = otherPlayer(source.ownerId);
-    const result = destroyAtLaneForced(
-      state,
-      lane,
-      enemy,
-      (c) => currentPower(state, c) >= minPower,
-      source,
-    );
-    if (result.destroyed.length === 0) return state;
-    const name = getCardDef(source.defId).name;
-    return {
-      ...result.state,
-      log: [
-        ...result.state.log,
-        {
-          turn: state.turn,
-          text: `${name} tranche ${result.destroyed.length} carte(s) ennemie(s) ici (puissance ≥ ${minPower}).`,
-        },
-      ],
-    };
-  },
+  /** Shura — ajoute une carte du deck adverse de son côté ici, la détruit si puissance inférieure. */
+  'shura-reveal-and-destroy': (state, source, lane) =>
+    resolveShuraRevealThenDestroy(state, source, lane).final,
 
   'debuff-strongest-enemy-here': (state, source, lane) => {
     const def = getCardDef(source.defId);
@@ -662,59 +792,6 @@ const ON_REVEAL: Record<string, OnRevealHandler> = {
     return next;
   },
 
-  /**
-   * Phénix — destroys the weakest other ally in this lane and bounces back to
-   * the deck. Once per partie per Phénix instance: the `abilityUsed` flag
-   * persists when the card returns to the deck (stored as a CardInstance).
-   */
-  'phoenix-sacrifice-bounce': (state, source, lane) => {
-    if (source.abilityUsed) return state;
-    const allies = state.lanes[lane].cards[source.ownerId].filter(
-      (c) => c.uid !== source.uid,
-    );
-    if (allies.length === 0) return state;
-    const weakestPick = allies
-      .map((c) => ({ c, p: currentPower(state, c) }))
-      .sort((a, b) => a.p - b.p)[0];
-    const weakest = weakestPick.c;
-    const { state: afterDestroy, destroyed } = destroyAtLane(
-      state,
-      lane,
-      source.ownerId,
-      (c) => c.uid === weakest.uid,
-      source,
-    );
-    // If the target was protected, the destruction failed — keep the ability
-    // available for a retry.
-    if (destroyed.length === 0) return afterDestroy;
-    // Mark the in-lane Phénix as exhausted, then return it to hand
-    // (preserving the abilityUsed flag on the instance).
-    const gained = Math.max(0, weakestPick.p);
-    const phoenixUsed: CardInstance = {
-      ...source,
-      abilityUsed: true,
-      basePower: source.basePower + gained,
-    };
-    const stateWithFlag = updateCardInLane(
-      afterDestroy,
-      lane,
-      source.ownerId,
-      source.uid,
-      phoenixUsed,
-    );
-    const bounced = returnToHand(stateWithFlag, lane, source.ownerId, phoenixUsed);
-    return {
-      ...bounced,
-      log: [
-        ...bounced.log,
-        {
-          turn: bounced.turn,
-          text: `${getCardDef(source.defId).name} renaît de ses cendres (+${gained}).`,
-        },
-      ],
-    };
-  },
-
   /** Cygne — silences a random opposing card in this lane that has an ongoing. */
   'silence-random-opposing-enemy': (state, source, lane) => {
     const enemy = otherPlayer(source.ownerId);
@@ -753,8 +830,7 @@ const ON_REVEAL: Record<string, OnRevealHandler> = {
       ...dead,
       basePower: def.power,
       revealed: true,
-      // Reset transient flags but preserve abilityUsed so a Phénix that died
-      // mid-bounce-attempt can't farm an extra resurrect-bounce loop.
+      // Reset transient flags (Ikki rebirth keeps its doubled basePower).
       silenced: false,
       playedTurn: state.turn,
     };
@@ -1059,6 +1135,7 @@ const ONGOING: Record<string, OngoingHandler> = {
   'ongoing-tick-buff-self': () => ({}),
   'ongoing-tick-june-cosmos': () => ({}),
   'ongoing-reduce-cost-hand-deck': () => ({}),
+  'ongoing-increase-enemy-hand-cost': () => ({}),
   'ongoing-tick-summon-double-once': () => ({}),
 };
 
@@ -1269,6 +1346,46 @@ export function getHandDeckCostReduction(state: GameState, ownerId: PlayerId): n
     }
   }
   return total;
+}
+
+/**
+ * Surcoût imposé à la main de `victimId` par les effets continus adverses
+ * (ex. Milo : +1 à toutes les cartes en main).
+ */
+export function getEnemyHandCostIncrease(
+  state: GameState,
+  victimId: PlayerId,
+): number {
+  const enemy = otherPlayer(victimId);
+  const silencedLanes = new Set<LocationIndex>();
+  for (const l of [0, 1, 2] as LocationIndex[]) {
+    if (isLaneSilenced(state, l)) silencedLanes.add(l);
+  }
+
+  let total = 0;
+  for (const l of [0, 1, 2] as LocationIndex[]) {
+    if (silencedLanes.has(l)) continue;
+    for (const c of state.lanes[l].cards[enemy]) {
+      if (c.silenced) continue;
+      const def = getCardDef(c.defId);
+      if (def.ability?.id !== 'ongoing-increase-enemy-hand-cost') continue;
+      let amount = (def.ability.params?.amount as number) ?? 1;
+      if (isSanctuaryLane(state, l, silencedLanes)) amount *= 2;
+      total += amount;
+    }
+  }
+  return total;
+}
+
+/** Coût effectif pour jouer une carte depuis la main. */
+export function getEffectiveHandCost(
+  state: GameState,
+  ownerId: PlayerId,
+  baseCost: number,
+): number {
+  const reduction = getHandDeckCostReduction(state, ownerId);
+  const increase = getEnemyHandCostIncrease(state, ownerId);
+  return Math.max(0, baseCost - reduction + increase);
 }
 
 // ---------------------------------------------------------------------------
@@ -1506,6 +1623,290 @@ function otherPlayer(id: PlayerId): PlayerId {
   return id === 'player' ? 'ai' : 'player';
 }
 
+export interface ShuraRevealResolve {
+  /** État après placement de la carte tirée (avant son au révélé). */
+  afterPlace: GameState;
+  /** État après l'effet au révélé de la carte tirée. */
+  afterEffect: GameState;
+  /** État final après destruction conditionnelle. */
+  final: GameState;
+  placedUid: string | null;
+  destroyedUid: string | null;
+  /** Index de slot au moment du placement (vol d'invocation). */
+  summonSlotIndex: number;
+  /** Côté où la carte est invoquée (deck adverse). */
+  summonSide: PlayerId;
+  /** Index de slot au moment de la destruction (peut différer si l'effet déplace). */
+  slotIndex: number;
+  /** Côté où la carte se trouve pour la destruction. */
+  enemySide: PlayerId;
+  placedDefId: string | null;
+}
+
+const GALACTIC_TOURNAMENT_ID = 'loc-galactic-tournament-double-on-reveal';
+
+function findCardOnLane(
+  state: GameState,
+  lane: LocationIndex,
+  uid: string,
+): { card: CardInstance; side: PlayerId } | null {
+  for (const side of ['player', 'ai'] as PlayerId[]) {
+    const card = state.lanes[lane].cards[side].find((c) => c.uid === uid);
+    if (card) return { card, side };
+  }
+  return null;
+}
+
+function applyPulledCardOnReveal(
+  state: GameState,
+  lane: LocationIndex,
+  uid: string,
+): GameState {
+  if (isOnRevealDisabled(state, lane)) {
+    const found = findCardOnLane(state, lane, uid);
+    if (found && getCardDef(found.card.defId).ability?.kind === 'on-reveal') {
+      return {
+        ...state,
+        log: [
+          ...state.log,
+          {
+            turn: state.turn,
+            text: `Un sceau empêche l’effet Au révélé à ${state.locations[lane].name}.`,
+          },
+        ],
+      };
+    }
+    return state;
+  }
+
+  let s = state;
+  const first = findCardOnLane(s, lane, uid);
+  if (!first) return s;
+  if (getCardDef(first.card.defId).ability?.kind !== 'on-reveal') return s;
+
+  const runPass = () => {
+    const found = findCardOnLane(s, lane, uid);
+    if (!found) return;
+    s = applyOnReveal(s, found.card, lane);
+  };
+
+  runPass();
+
+  if (s.locations[lane]?.effect?.id === GALACTIC_TOURNAMENT_ID) {
+    const still = findCardOnLane(s, lane, uid);
+    if (still && getCardDef(still.card.defId).ability?.kind === 'on-reveal') {
+      runPass();
+      const def = getCardDef(first.card.defId);
+      s = {
+        ...s,
+        log: [
+          ...s.log,
+          {
+            turn: s.turn,
+            text: `${s.locations[lane].name} : au révélé de ${def.name} une seconde fois.`,
+          },
+        ],
+      };
+    }
+  }
+
+  return s;
+}
+
+/**
+ * Shura — tire une carte du deck adverse, la place de son côté ici,
+ * laisse jouer son effet Au révélé, puis la détruit seulement si sa
+ * puissance (après effet) est inférieure à celle de Shura et qu'elle
+ * n'est pas protégée / indestructible.
+ */
+export function resolveShuraRevealThenDestroy(
+  state: GameState,
+  source: CardInstance,
+  lane: LocationIndex,
+): ShuraRevealResolve {
+  const enemy = otherPlayer(source.ownerId);
+  const empty: ShuraRevealResolve = {
+    afterPlace: state,
+    afterEffect: state,
+    final: state,
+    placedUid: null,
+    destroyedUid: null,
+    summonSlotIndex: -1,
+    summonSide: enemy,
+    slotIndex: -1,
+    enemySide: enemy,
+    placedDefId: null,
+  };
+
+  const enemyPlayer = state.players[enemy];
+  if (enemyPlayer.deck.length === 0) return empty;
+
+  const [drawn, ...restDeck] = enemyPlayer.deck;
+  const name = getCardDef(source.defId).name;
+  const drawnDef = getCardDef(drawn.defId);
+
+  if (!canAddRevealedToSide(state, lane, enemy)) {
+    const blocked: GameState = {
+      ...state,
+      log: [
+        ...state.log,
+        {
+          turn: state.turn,
+          text: `${name} : le côté adverse est plein, impossible d'ajouter une carte.`,
+        },
+      ],
+    };
+    return {
+      ...empty,
+      afterPlace: blocked,
+      afterEffect: blocked,
+      final: blocked,
+    };
+  }
+
+  const placed: CardInstance = {
+    ...drawn,
+    revealed: true,
+    // Invocation — pas jouée par le propriétaire (ex. Île d'Andromède ne déplace pas).
+    playedTurn: undefined,
+    playedLane: undefined,
+    silenced: false,
+  };
+
+  let afterPlace: GameState = {
+    ...state,
+    players: {
+      ...state.players,
+      [enemy]: { ...enemyPlayer, deck: restDeck },
+    },
+  };
+  afterPlace = appendRevealedToSide(afterPlace, lane, enemy, placed);
+
+  const slotIndex = afterPlace.lanes[lane].cards[enemy].findIndex(
+    (c) => c.uid === placed.uid,
+  );
+  const summonSlotIndex = slotIndex;
+  const summonSide = enemy;
+
+  afterPlace = {
+    ...afterPlace,
+    log: [
+      ...afterPlace.log,
+      {
+        turn: state.turn,
+        text: `${name} invoque ${drawnDef.name} du deck adverse ici.`,
+      },
+    ],
+  };
+
+  const afterEffect = applyPulledCardOnReveal(
+    afterPlace,
+    lane,
+    placed.uid,
+  );
+
+  const located = findCardOnLane(afterEffect, lane, placed.uid);
+  if (!located) {
+    // La carte a quitté le lieu via son effet — pas de destruction.
+    return {
+      afterPlace,
+      afterEffect,
+      final: afterEffect,
+      placedUid: placed.uid,
+      destroyedUid: null,
+      summonSlotIndex,
+      summonSide,
+      slotIndex,
+      enemySide: enemy,
+      placedDefId: placed.defId,
+    };
+  }
+
+  const effectSlotIndex = afterEffect.lanes[lane].cards[located.side].findIndex(
+    (c) => c.uid === placed.uid,
+  );
+  const vfxSlot = effectSlotIndex >= 0 ? effectSlotIndex : slotIndex;
+
+  const shuraOnLane = findCardOnLane(afterEffect, lane, source.uid);
+  const shuraCard = shuraOnLane?.card ?? source;
+  const shuraPower = currentPower(afterEffect, shuraCard);
+  const drawnPower = currentPower(afterEffect, located.card);
+
+  if (!(drawnPower < shuraPower)) {
+    return {
+      afterPlace,
+      afterEffect,
+      final: afterEffect,
+      placedUid: placed.uid,
+      destroyedUid: null,
+      summonSlotIndex,
+      summonSide,
+      slotIndex: vfxSlot,
+      enemySide: located.side,
+      placedDefId: placed.defId,
+    };
+  }
+
+  if (isProtected(afterEffect, located.card, lane)) {
+    const resisted: GameState = {
+      ...afterEffect,
+      log: [
+        ...afterEffect.log,
+        {
+          turn: state.turn,
+          text: `${drawnDef.name} résiste à ${name} !`,
+        },
+      ],
+    };
+    return {
+      afterPlace,
+      afterEffect: resisted,
+      final: resisted,
+      placedUid: placed.uid,
+      destroyedUid: null,
+      summonSlotIndex,
+      summonSide,
+      slotIndex: vfxSlot,
+      enemySide: located.side,
+      placedDefId: placed.defId,
+    };
+  }
+
+  const result = destroyAtLane(
+    afterEffect,
+    lane,
+    located.side,
+    (c) => c.uid === placed.uid,
+    source,
+  );
+  const destroyed = result.destroyed.some((c) => c.uid === placed.uid);
+  const final: GameState = destroyed
+    ? {
+        ...result.state,
+        log: [
+          ...result.state.log,
+          {
+            turn: state.turn,
+            text: `${drawnDef.name} (${drawnPower}) est inférieur à ${name} (${shuraPower}) — détruit !`,
+          },
+        ],
+      }
+    : result.state;
+
+  return {
+    afterPlace,
+    afterEffect,
+    final,
+    placedUid: placed.uid,
+    destroyedUid: destroyed ? placed.uid : null,
+    summonSlotIndex,
+    summonSide,
+    slotIndex: vfxSlot,
+    enemySide: located.side,
+    placedDefId: placed.defId,
+  };
+}
+
 /**
  * Current effective power of a card: basePower + ongoing modifiers.
  * Use this whenever a destruction handler needs to compare power against
@@ -1572,54 +1973,6 @@ function hasCardInPlay(state: GameState, ownerId: PlayerId, defId: string): bool
     }
   }
   return false;
-}
-
-function bounceFromLaneToHand(
-  state: GameState,
-  lane: LocationIndex,
-  side: PlayerId,
-  uid: string,
-  source?: CardInstance,
-): GameState {
-  const existing = state.lanes[lane].cards[side].find((c) => c.uid === uid);
-  if (!existing) return state;
-  if (isIndestructible(state, existing, lane)) return state;
-  const newLanes = state.lanes.map((l, i) => {
-    if (i !== lane) return l;
-    return {
-      cards: {
-        player:
-          side === 'player'
-            ? l.cards.player.filter((c) => c.uid !== uid)
-            : l.cards.player,
-        ai:
-          side === 'ai' ? l.cards.ai.filter((c) => c.uid !== uid) : l.cards.ai,
-      },
-    };
-  });
-  const bounced: CardInstance = {
-    ...existing,
-    revealed: false,
-    playedTurn: undefined,
-    silenced: false,
-  };
-  const victimName = getCardDef(existing.defId).name;
-  const sourceName = source ? getCardDef(source.defId).name : null;
-  return {
-    ...state,
-    lanes: newLanes,
-    players: {
-      ...state.players,
-      [side]: { ...state.players[side], hand: [...state.players[side].hand, bounced] },
-    },
-    log: [
-      ...state.log,
-      {
-        turn: state.turn,
-        text: sourceName ? `${sourceName} renvoie ${victimName} en main !` : `${victimName} retourne en main.`,
-      },
-    ],
-  };
 }
 
 function addTokenToLane(
@@ -1754,6 +2107,9 @@ export function isProtected(
 }
 
 export const SHIRYU_DEATH_ABILITY_ID = 'shiryu-death-buff-allies';
+export const BLACK_DRAGON_DEATH_ABILITY_ID =
+  'black-dragon-death-summon-double';
+export const IKKI_DEATH_ABILITY_ID = 'ikki-death-double-bounce';
 
 /** +N permanent à chaque carte alliée en jeu (même propriétaire, hors ennemis). */
 function buffAlliesInPlay(
@@ -1782,35 +2138,100 @@ function buffAlliesInPlay(
 function applyDestroyedCardEffects(
   state: GameState,
   destroyed: CardInstance[],
+  lane: LocationIndex,
 ): GameState {
   let next = state;
   for (const card of destroyed) {
     const def = getCardDef(card.defId);
-    if (def.ability?.id !== SHIRYU_DEATH_ABILITY_ID) continue;
+    if (def.ability?.kind !== 'on-destroy') continue;
 
-    const amount = (def.ability?.params?.amount as number) ?? 1;
-    const ownerId = card.ownerId;
-    const { state: buffed, hit } = buffAlliesInPlay(
-      next,
-      ownerId,
-      amount,
-      card.uid,
-    );
-    next = buffed;
+    if (def.ability.id === SHIRYU_DEATH_ABILITY_ID) {
+      const amount = (def.ability?.params?.amount as number) ?? 1;
+      const ownerId = card.ownerId;
+      const { state: buffed, hit } = buffAlliesInPlay(
+        next,
+        ownerId,
+        amount,
+        card.uid,
+      );
+      next = buffed;
 
-    next = {
-      ...next,
-      log: [
-        ...next.log,
-        {
-          turn: next.turn,
-          text:
-            hit > 0
-              ? `${def.name} s'élève en comète : +${amount} à ${hit} carte(s) alliée(s).`
-              : `${def.name} s'élève en comète.`,
+      next = {
+        ...next,
+        log: [
+          ...next.log,
+          {
+            turn: next.turn,
+            text:
+              hit > 0
+                ? `${def.name} s'élève en comète : +${amount} à ${hit} carte(s) alliée(s).`
+                : `${def.name} s'élève en comète.`,
+          },
+        ],
+      };
+      continue;
+    }
+
+    if (def.ability.id === BLACK_DRAGON_DEATH_ABILITY_ID) {
+      if (!canAddRevealedToSide(next, lane, card.ownerId)) continue;
+      const tokenId =
+        (def.ability.params?.tokenId as string) ?? 'black-dragon-double';
+      const tokenDef = getCardDef(tokenId);
+      const token: CardInstance = {
+        uid: `t${Math.random().toString(16).slice(2)}`,
+        defId: tokenId,
+        ownerId: card.ownerId,
+        basePower: tokenDef.power,
+        revealed: true,
+        playedTurn: next.turn,
+      };
+      next = appendRevealedToSide(next, lane, card.ownerId, token);
+      next = {
+        ...next,
+        log: [
+          ...next.log,
+          {
+            turn: next.turn,
+            text: `${def.name} laisse son double sur le lieu.`,
+          },
+        ],
+      };
+      continue;
+    }
+
+    if (def.ability.id === IKKI_DEATH_ABILITY_ID) {
+      const ownerId = card.ownerId;
+      const doubled = Math.max(0, card.basePower) * 2;
+      const reborn: CardInstance = {
+        ...card,
+        basePower: doubled,
+        revealed: false,
+        playedTurn: undefined,
+        playedLane: undefined,
+        silenced: false,
+      };
+      next = {
+        ...next,
+        graveyard: {
+          ...next.graveyard,
+          [ownerId]: next.graveyard[ownerId].filter((c) => c.uid !== card.uid),
         },
-      ],
-    };
+        players: {
+          ...next.players,
+          [ownerId]: {
+            ...next.players[ownerId],
+            hand: [...next.players[ownerId].hand, reborn],
+          },
+        },
+        log: [
+          ...next.log,
+          {
+            turn: next.turn,
+            text: `${def.name} renaît de ses cendres (${doubled} pwr) et retourne en main.`,
+          },
+        ],
+      };
+    }
   }
   return next;
 }
@@ -1890,7 +2311,7 @@ export function destroyAtLane(
     log: [...state.log, ...destroyLogs, ...protectLogs],
   };
   return {
-    state: applyDestroyedCardEffects(baseState, destroyed),
+    state: applyDestroyedCardEffects(baseState, destroyed, lane),
     destroyed,
   };
 }
@@ -1960,7 +2381,7 @@ export function destroyAtLaneForced(
     log: [...state.log, ...destroyLogs, ...protectLogs],
   };
   return {
-    state: applyDestroyedCardEffects(baseState, destroyed),
+    state: applyDestroyedCardEffects(baseState, destroyed, lane),
     destroyed,
   };
 }
@@ -2004,8 +2425,8 @@ export function adjustLanePower(
 
 /**
  * Bounce a card from any lane back to the bottom of its owner's deck.
- * Used by Phénix. Preserves per-instance flags (notably `abilityUsed`) by
- * pushing the full instance — a fresh instantiation would reset them.
+ * Preserves per-instance flags by pushing the full instance —
+ * a fresh instantiation would reset them.
  */
 export function returnToDeck(
   state: GameState,

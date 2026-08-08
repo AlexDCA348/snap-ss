@@ -120,10 +120,19 @@ export interface GameLogEntry {
   text: string;
 }
 
+export type GameMode = 'standard' | 'infinity';
+
 export interface GameState {
   turn: number; // 1..6
   maxTurns: number;
   phase: Phase;
+  /** Mode de partie — infinity = sandbox (pas de récompenses). */
+  mode: GameMode;
+  /**
+   * Infinity seulement : si true, cosmos et pioche comme une partie normale
+   * (pas de cosmos ∞ ni main complète).
+   */
+  infinityRealConditions?: boolean;
   players: Record<PlayerId, PlayerState>;
   locations: LocationDefinition[]; // length 3
   lanes: LaneState[]; // length 3

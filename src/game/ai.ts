@@ -1,4 +1,5 @@
 import { getCardDef } from './cards';
+import { getEffectiveHandCost } from './abilities';
 import { canPlay, playCard, scoreSnapshot } from './engine';
 import { locationPlayBonus } from './locationEffects';
 import { countOccupiedOnSide } from './laneRules';
@@ -20,12 +21,17 @@ export function aiTakeTurn(state: GameState): GameState {
   for (let i = 0; i < 8; i += 1) {
     const ai = s.players.ai;
     const candidates = ai.hand
-      .filter((c) => getCardDef(c.defId).cost <= ai.cosmos)
-      .sort(
-        (a, b) =>
-          getCardDef(b.defId).cost - getCardDef(a.defId).cost ||
-          getCardDef(b.defId).power - getCardDef(a.defId).power,
-      );
+      .filter(
+        (c) =>
+          getEffectiveHandCost(s, 'ai', getCardDef(c.defId).cost) <= ai.cosmos,
+      )
+      .sort((a, b) => {
+        const ca = getEffectiveHandCost(s, 'ai', getCardDef(a.defId).cost);
+        const cb = getEffectiveHandCost(s, 'ai', getCardDef(b.defId).cost);
+        return (
+          cb - ca || getCardDef(b.defId).power - getCardDef(a.defId).power
+        );
+      });
     if (candidates.length === 0) break;
 
     let bestPlay: { uid: string; lane: LocationIndex; score: number } | null =

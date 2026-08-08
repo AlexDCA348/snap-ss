@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { DECK_SIZE, getPlayableCardDefs } from '../../game/deckPool';
+import { DECK_SIZE, getBuildableCardDefs } from '../../game/deckPool';
 import type { Faction } from '../../game/types';
 import { useCollectionStore } from '../../store/collectionStore';
 import type { LibrarySort } from './LibraryFilters';
@@ -12,7 +12,7 @@ export function useLibraryFilters(deckCardIds: string[]) {
   const [sort, setSort] = useState<LibrarySort>('cost');
 
   const filtered = useMemo(() => {
-    let list = getPlayableCardDefs(collection);
+    let list = getBuildableCardDefs();
     const q = search.trim().toLowerCase();
     if (q) {
       list = list.filter(

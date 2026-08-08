@@ -9,6 +9,8 @@ import { Hud } from '../components/Hud';
 import { DeathmaskSoulsOverlay } from '../components/DeathmaskSoulsOverlay';
 import { SagaDuplicateOverlay } from '../components/SagaDuplicateOverlay';
 import { AndromedaRelocateOverlay } from '../components/AndromedaRelocateOverlay';
+import { ShuraSummonOverlay } from '../components/ShuraSummonOverlay';
+import { SiriusBloomOverlay } from '../components/SiriusBloomOverlay';
 import { DanteChainOverlay } from '../components/DanteChainOverlay';
 import { ShiryuDragonCometOverlay } from '../components/ShiryuDragonCometOverlay';
 import { IkkiPhoenixOverlay } from '../components/IkkiPhoenixOverlay';
@@ -18,7 +20,7 @@ import type { LocationIndex } from '../game/types';
 import { useMiniPhone } from '../hooks/useMiniPhone';
 import { useLockPageScroll } from '../hooks/useLockPageScroll';
 import { canPlay } from '../game/engine';
-import { getHandDeckCostReduction } from '../game/abilities';
+import { getEffectiveHandCost } from '../game/abilities';
 import { useAppStore } from '../store/appStore';
 import { useCollectionStore } from '../store/collectionStore';
 import { useGame } from '../store/gameStore';
@@ -34,11 +36,16 @@ export function GameScreen() {
   const unplayCard = useGame((s) => s.unplayCard);
   const endTurn = useGame((s) => s.endTurn);
   const newGame = useGame((s) => s.newGame);
+  const newInfinityGame = useGame((s) => s.newInfinityGame);
+  const lastInfinityDeckIds = useGame((s) => s.lastInfinityDeckIds);
+  const lastInfinityRealConditions = useGame((s) => s.lastInfinityRealConditions);
   const ikkiPhoenixBursts = useGame((s) => s.ikkiPhoenixBursts);
   const jamianCrowBursts = useGame((s) => s.jamianCrowBursts);
   const deathmaskSoulBursts = useGame((s) => s.deathmaskSoulBursts);
   const sagaDuplicateBursts = useGame((s) => s.sagaDuplicateBursts);
   const andromedaRelocateBursts = useGame((s) => s.andromedaRelocateBursts);
+  const shuraSummonBursts = useGame((s) => s.shuraSummonBursts);
+  const siriusBloomBursts = useGame((s) => s.siriusBloomBursts);
   const danteChainBursts = useGame((s) => s.danteChainBursts);
   const shiryuDragonBursts = useGame((s) => s.shiryuDragonBursts);
   const matchSerial = useGame((s) => s.matchSerial);
@@ -48,10 +55,11 @@ export function GameScreen() {
   const dismissPendingReward = useCollectionStore((s) => s.dismissPendingReward);
 
   useEffect(() => {
+    if (state.mode === 'infinity') return;
     if (state.phase === 'ended' && state.winner === 'player') {
       grantVictoryRewardForMatch(matchSerial);
     }
-  }, [state.phase, state.winner, matchSerial, grantVictoryRewardForMatch]);
+  }, [state.phase, state.winner, state.mode, matchSerial, grantVictoryRewardForMatch]);
 
   const compact = useCompactUi();
   const mini = useMiniPhone();
@@ -65,13 +73,16 @@ export function GameScreen() {
   selectedCardRef.current = selectedCard;
 
   const player = state.players.player;
-  const costReduction = getHandDeckCostReduction(state, 'player');
 
   const handleMenu = () => {
     goToMenu();
   };
 
   const handleReplay = () => {
+    if (state.mode === 'infinity' && lastInfinityDeckIds?.length) {
+      newInfinityGame(lastInfinityDeckIds, lastInfinityRealConditions);
+      return;
+    }
     newGame();
   };
 
@@ -88,7 +99,7 @@ export function GameScreen() {
     const def = getCardDef(card.defId);
     setSelectedCard({
       uid,
-      cost: Math.max(0, def.cost - costReduction),
+      cost: getEffectiveHandCost(state, 'player', def.cost),
     });
   };
 
@@ -159,8 +170,14 @@ export function GameScreen() {
             <div
               className={[
                 compact ? 'flex items-end gap-1.5 w-full game-hand' : 'w-full',
+                'relative',
               ].join(' ')}
             >
+              <div
+                data-deck-zone="player"
+                aria-hidden
+                className="pointer-events-none absolute right-1 bottom-2 w-8 h-10 opacity-0"
+              />
               <Hand
                 hand={player.hand}
                 cosmos={player.cosmos}
@@ -219,9 +236,14 @@ export function GameScreen() {
         bursts={andromedaRelocateBursts}
         compact={compact}
       />
+      <ShuraSummonOverlay bursts={shuraSummonBursts} compact={compact} />
+      <SiriusBloomOverlay bursts={siriusBloomBursts} compact={compact} />
       <DanteChainOverlay bursts={danteChainBursts} compact={compact} />
       <ShiryuDragonCometOverlay bursts={shiryuDragonBursts} compact={compact} />
-      <VictoryRewardModal reward={pendingReward} onDismiss={dismissPendingReward} />
+      <VictoryRewardModal
+        reward={state.mode === 'infinity' ? null : pendingReward}
+        onDismiss={dismissPendingReward}
+      />
       {touchDrag.drag && dragGhostCard ? (
         <TouchDragGhost
           defId={dragGhostCard.defId}

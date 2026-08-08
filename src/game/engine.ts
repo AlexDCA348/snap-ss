@@ -14,7 +14,7 @@ import {
   applyJamianEndOfReveal,
   applyTicks,
   computeOngoing,
-  getHandDeckCostReduction,
+  getEffectiveHandCost,
   isIndestructible,
 } from './abilities';
 import { scoringPower } from './sagaIllusion';
@@ -29,6 +29,8 @@ import {
 
 const STARTING_HAND = 3;
 const MAX_TURNS = 6;
+/** Cosmos disponible chaque tour en mode Infinity (sandbox). */
+export const INFINITY_COSMOS = 99;
 
 let uidCounter = 0;
 function nextUid(): string {
@@ -68,16 +70,21 @@ function emptyLane(): LaneState {
   return { cards: { player: [], ai: [] } };
 }
 
-/** Mélange les defIds puis répartit main (3) + pile deck — ordre du builder ignoré en partie. */
-function makePlayerFromDeckIds(id: PlayerId, deckIds: string[]): PlayerState {
+/** Mélange les defIds puis répartit main + pile deck — ordre du builder ignoré en partie. */
+function makePlayerFromDeckIds(
+  id: PlayerId,
+  deckIds: string[],
+  startingHandSize: number = STARTING_HAND,
+): PlayerState {
   const shuffledIds = shuffle(deckIds);
   const instances = shuffledIds.map((defId) => instantiate(defId, id));
+  const handSize = Math.min(Math.max(0, startingHandSize), instances.length);
   return {
     id,
     cosmos: 0,
     maxCosmos: 0,
-    deck: instances.slice(STARTING_HAND),
-    hand: instances.slice(0, STARTING_HAND),
+    deck: instances.slice(handSize),
+    hand: instances.slice(0, handSize),
     pending: emptyPending(),
   };
 }
@@ -90,29 +97,53 @@ export function buildRandomDeckForGame(): string[] {
 export interface CreateInitialStateOptions {
   playerDeckIds?: string[];
   aiDeckIds?: string[];
+  mode?: 'standard' | 'infinity';
+  /** Infinity : règles normales (cosmos tour / deck+main) au lieu du sandbox. */
+  infinityRealConditions?: boolean;
+}
+
+/** Infinity sandbox = cosmos ∞ + main complète. */
+export function isInfinitySandbox(state: GameState): boolean {
+  return state.mode === 'infinity' && !state.infinityRealConditions;
 }
 
 export function createInitialState(
   options?: CreateInitialStateOptions,
 ): GameState {
   uidCounter = 0;
+  const mode = options?.mode ?? 'standard';
+  const infinity = mode === 'infinity';
+  const realConditions = infinity && Boolean(options?.infinityRealConditions);
+  const sandbox = infinity && !realConditions;
   const playerIds =
     options?.playerDeckIds && options.playerDeckIds.length > 0
       ? options.playerDeckIds
       : buildRandomDeck();
   // IA : nouveau deck tiré du pool à chaque partie (sauf override explicite).
   const aiIds = options?.aiDeckIds ?? buildRandomDeck();
-  const player = makePlayerFromDeckIds('player', playerIds);
+  const playerHandSize = sandbox ? playerIds.length : STARTING_HAND;
+  const player = makePlayerFromDeckIds('player', playerIds, playerHandSize);
   const ai = makePlayerFromDeckIds('ai', aiIds);
   const locations = shuffle(LOCATIONS).slice(0, 3);
   let state: GameState = {
     turn: 0,
     maxTurns: MAX_TURNS,
     phase: 'setup',
+    mode,
+    infinityRealConditions: infinity ? realConditions : undefined,
     players: { player, ai },
     locations,
     lanes: [emptyLane(), emptyLane(), emptyLane()],
-    log: [{ turn: 0, text: 'La cosmoénergie s\u2019éveille...' }],
+    log: [
+      {
+        turn: 0,
+        text: infinity
+          ? realConditions
+            ? 'Mode Infinity — conditions réelles (cosmos & pioche normaux).'
+            : 'Mode Infinity — cosmos illimité, main complète.'
+          : 'La cosmoénergie s\u2019éveille...',
+      },
+    ],
     graveyard: { player: [], ai: [] },
     totalDestroyed: 0,
     totalDestroyedPower: 0,
@@ -136,20 +167,23 @@ export function startNextTurn(state: GameState): GameState {
     return endGame(state);
   }
   const turn = state.turn + 1;
+  const sandbox = isInfinitySandbox(state);
   const playerBonus = state.players.player.nextTurnCosmosBonus ?? 0;
   const aiBonus = state.players.ai.nextTurnCosmosBonus ?? 0;
+  const playerCosmos = sandbox ? INFINITY_COSMOS : turn + playerBonus;
+  const aiCosmos = sandbox ? INFINITY_COSMOS : turn + aiBonus;
   const newPlayers: Record<PlayerId, PlayerState> = {
     player: drawOne({
       ...state.players.player,
-      cosmos: turn + playerBonus,
-      maxCosmos: turn + playerBonus,
+      cosmos: playerCosmos,
+      maxCosmos: playerCosmos,
       nextTurnCosmosBonus: 0,
       pending: emptyPending(),
     }),
     ai: drawOne({
       ...state.players.ai,
-      cosmos: turn + aiBonus,
-      maxCosmos: turn + aiBonus,
+      cosmos: aiCosmos,
+      maxCosmos: aiCosmos,
       nextTurnCosmosBonus: 0,
       pending: emptyPending(),
     }),
@@ -164,8 +198,9 @@ export function startNextTurn(state: GameState): GameState {
       ...state.log,
       {
         turn,
-        text:
-          playerBonus || aiBonus
+        text: sandbox
+          ? `Tour ${turn} — Cosmos ∞.`
+          : playerBonus || aiBonus
             ? `Tour ${turn} — Cosmos ${turn} (+bonus).`
             : `Tour ${turn} — Cosmos ${turn}.`,
       },
@@ -184,8 +219,7 @@ export function canPlay(
   const card = p.hand.find((c) => c.uid === uid);
   if (!card) return { ok: false, reason: 'Carte introuvable.' };
   const def = getCardDef(card.defId);
-  const reduction = getHandDeckCostReduction(state, playerId);
-  const effectiveCost = Math.max(0, def.cost - reduction);
+  const effectiveCost = getEffectiveHandCost(state, playerId, def.cost);
   if (effectiveCost > p.cosmos)
     return { ok: false, reason: 'Cosmos insuffisant.' };
   if (!canPlaceCardOnSide(state, lane, playerId))
@@ -216,8 +250,7 @@ export function playCard(
   const p = state.players[playerId];
   const card = p.hand.find((c) => c.uid === uid)!;
   const def = getCardDef(card.defId);
-  const reduction = getHandDeckCostReduction(state, playerId);
-  const effectiveCost = Math.max(0, def.cost - reduction);
+  const effectiveCost = getEffectiveHandCost(state, playerId, def.cost);
   const newHand = p.hand.filter((c) => c.uid !== uid);
   const newPending: Record<LocationIndex, CardInstance[]> = {
     0: p.pending[0].slice(),
@@ -260,8 +293,7 @@ export function unplayCard(
   if (foundLane === null || !foundCard) return state;
   if (isIndestructible(state, foundCard, foundLane)) return state;
   const def = getCardDef(foundCard.defId);
-  const reduction = getHandDeckCostReduction(state, playerId);
-  const effectiveCost = Math.max(0, def.cost - reduction);
+  const effectiveCost = getEffectiveHandCost(state, playerId, def.cost);
   const newPending: Record<LocationIndex, CardInstance[]> = {
     0: p.pending[0].slice(),
     1: p.pending[1].slice(),

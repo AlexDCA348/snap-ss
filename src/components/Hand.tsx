@@ -4,7 +4,7 @@ import { getCardDef } from '../game/cards';
 import { handCardSize } from '../game/cardSizes';
 import type { CardInstance } from '../game/types';
 import { useGame } from '../store/gameStore';
-import { getHandDeckCostReduction, computeOngoing, effectivePower } from '../game/abilities';
+import { getEffectiveHandCost, computeOngoing, effectivePower } from '../game/abilities';
 import { aresDisplayPower, isAresCard } from '../game/aresInferno';
 import { CardView } from './CardView';
 
@@ -43,23 +43,23 @@ export function Hand({
   onPointerDownCard,
 }: Props) {
   const inspectCard = useGame((s) => s.inspectCard);
-  const state = useGame((s) => s.state);
-  const reduction = getHandDeckCostReduction(state, 'player');
   const cardSize = handCardSize(compact, mini);
+
+  const scrollable = compact || hand.length > 5;
 
   return (
     <div
       className={[
         'relative w-full game-hand',
-        compact
+        scrollable
           ? [
               'flex gap-1 overflow-x-auto overflow-y-hidden snap-x snap-mandatory px-0.5 py-0.5 scrollbar-thin',
-              mini ? 'min-h-[76px] max-h-[80px]' : 'min-h-[100px] max-h-[104px]',
+              mini ? 'min-h-[76px] max-h-[80px]' : compact ? 'min-h-[100px] max-h-[104px]' : 'min-h-[140px] max-h-[148px]',
             ].join(' ')
           : 'flex justify-center items-end gap-2 min-h-[200px] py-2 flex-wrap max-w-full',
       ].join(' ')}
     >
-      {!compact ? (
+      {!compact && !scrollable ? (
         <CosmosOrb cosmos={cosmos} maxCosmos={maxCosmos} compact={false} />
       ) : null}
       <AnimatePresence>
@@ -69,12 +69,12 @@ export function Hand({
             card={card}
             cardSize={cardSize}
             cosmos={cosmos}
-            reduction={reduction}
             disabled={disabled}
             holoDisabled={holoDisabled}
             hideCost={hideCost}
             touchPlay={touchPlay}
             compact={compact}
+            scrollable={scrollable}
             selected={selectedUid === card.uid}
             onDragStart={onDragStart}
             onDragEnd={onDragEnd}
@@ -96,12 +96,12 @@ function HandCard({
   card,
   cardSize,
   cosmos,
-  reduction,
   disabled,
   holoDisabled,
   hideCost,
   touchPlay,
   compact,
+  scrollable,
   selected,
   onDragStart,
   onDragEnd,
@@ -111,12 +111,12 @@ function HandCard({
   card: CardInstance;
   cardSize: ReturnType<typeof handCardSize>;
   cosmos: number;
-  reduction: number;
   disabled?: boolean;
   holoDisabled?: boolean;
   hideCost?: boolean;
   touchPlay: boolean;
   compact: boolean;
+  scrollable: boolean;
   selected: boolean;
   onDragStart: (uid: string) => void;
   onDragEnd: () => void;
@@ -132,18 +132,18 @@ function HandCard({
   const displayPower = isAresCard(card.defId)
     ? aresDisplayPower(card, state)
     : effectivePower(card, ongoing);
-  const effectiveCost = Math.max(0, def.cost - reduction);
+  const effectiveCost = getEffectiveHandCost(state, 'player', def.cost);
   const affordable = !disabled && effectiveCost <= cosmos;
   const useDrag = !touchPlay && affordable;
 
   return (
     <motion.div
       layout
-      initial={{ y: compact ? 20 : 60, opacity: 0 }}
+      initial={{ y: compact || scrollable ? 20 : 60, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      exit={{ y: compact ? 24 : 80, opacity: 0 }}
+      exit={{ y: compact || scrollable ? 24 : 80, opacity: 0 }}
       transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-      className={compact ? 'shrink-0 snap-center' : undefined}
+      className={scrollable ? 'shrink-0 snap-center' : undefined}
     >
       <div
         draggable={useDrag}

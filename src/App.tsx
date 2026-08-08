@@ -2,6 +2,7 @@ import { DeckBuilderScreen } from './components/deckbuilder/DeckBuilderScreen';
 import { MainMenuScreen } from './screens/MainMenuScreen';
 import { GameScreen } from './screens/GameScreen';
 import { ArmoryScreen } from './screens/ArmoryScreen';
+import { InfinityDeckScreen } from './screens/InfinityDeckScreen';
 import { useAppStore } from './store/appStore';
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
       {screen === 'deckBuilder' ? <DeckBuilderScreen /> : null}
       {screen === 'game' ? <GameScreen /> : null}
       {screen === 'armory' ? <ArmoryScreen /> : null}
+      {screen === 'infinity' ? <InfinityDeckScreen /> : null}
 
       {toast ? (
         <div

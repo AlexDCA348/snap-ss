@@ -8,7 +8,7 @@ import {
 } from '../game/engine';
 import { aiTakeTurn } from '../game/ai';
 import {
-  collectIkkiRevealPhoenix,
+  collectIkkiDeathPhoenix,
   IKKI_PHOENIX_MS,
   type IkkiPhoenixBurst,
 } from '../game/ikkiPhoenix';
@@ -53,6 +53,17 @@ import {
   type ShuraBladeBurst,
 } from '../game/shuraBlade';
 import {
+  collectShuraSummonBursts,
+  SHURA_SUMMON_MS,
+  type ShuraSummonBurst,
+} from '../game/shuraSummon';
+import {
+  collectCosmosRevealBlooms,
+  collectSiriusRevealBlooms,
+  SIRIUS_BLOOM_MS,
+  type SiriusBloomBurst,
+} from '../game/siriusBloom';
+import {
   collectDeathmaskRevealSouls,
   DEATHMASK_SOULS_MS,
   type DeathmaskSoulBurst,
@@ -82,6 +93,11 @@ import {
   CAPELLA_DISKS_MS,
   type CapellaDiskBurst,
 } from '../game/capellaDisks';
+import {
+  collectGuiltyRevealSacrifice,
+  guiltySacrificeDurationMs,
+  type GuiltySacrificeBurst,
+} from '../game/guiltySacrifice';
 import {
   collectDanteRevealChains,
   DANTE_CHAIN_MS,
@@ -123,6 +139,10 @@ interface GameStore {
   shiryuDragonBursts: ShiryuDragonBurst[];
   /** Lames Shura — révélé uniquement. */
   shuraBladeBursts: ShuraBladeBurst[];
+  /** Invocation Shura — vol de la carte tirée. */
+  shuraSummonBursts: ShuraSummonBurst[];
+  /** Sirius — blob rose vers le deck. */
+  siriusBloomBursts: SiriusBloomBurst[];
   /** Fantômes DeathMask — révélé uniquement. */
   deathmaskSoulBursts: DeathmaskSoulBurst[];
   /** Aldébaran — atterrissage lourd au révélé. */
@@ -134,6 +154,8 @@ interface GameStore {
   /** Saga — duplication vers un autre lieu au révélé. */
   sagaDuplicateBursts: SagaDuplicateBurst[];
   capellaDiskBursts: CapellaDiskBurst[];
+  /** Guilty — sacrifice démoniaque au révélé. */
+  guiltySacrificeBursts: GuiltySacrificeBurst[];
   danteChainBursts: DanteChainBurst[];
   /** Île d'Andromède — déplacement vers un autre lieu au révélé. */
   andromedaRelocateBursts: AndromedaRelocateBurst[];
@@ -143,7 +165,13 @@ interface GameStore {
   inspectedLane: LocationIndex | null;
   /** Incrémenté à chaque nouvelle partie (idempotence récompenses). */
   matchSerial: number;
+  /** Deck éphémère du dernier match Infinity (pour Rejouer). */
+  lastInfinityDeckIds: string[] | null;
+  /** Dernier réglage « conditions réelles » Infinity (pour Rejouer). */
+  lastInfinityRealConditions: boolean;
   newGame: () => void;
+  /** Lance une partie sandbox Infinity avec un deck éphémère. */
+  newInfinityGame: (deckIds: string[], realConditions?: boolean) => void;
   playCard: (playerId: PlayerId, uid: string, lane: LocationIndex) => void;
   unplayCard: (playerId: PlayerId, uid: string) => void;
   endTurn: () => void;
@@ -163,15 +191,20 @@ export const useGame = create<GameStore>((set, get) => ({
   jamianCrowBursts: [],
   shiryuDragonBursts: [],
   shuraBladeBursts: [],
+  shuraSummonBursts: [],
+  siriusBloomBursts: [],
   deathmaskSoulBursts: [],
   aldebaranImpactBursts: [],
   ichiClawBursts: [],
   hyogaFrostBursts: [],
   sagaDuplicateBursts: [],
   capellaDiskBursts: [],
+  guiltySacrificeBursts: [],
   danteChainBursts: [],
   andromedaRelocateBursts: [],
   matchSerial: 0,
+  lastInfinityDeckIds: null,
+  lastInfinityRealConditions: false,
   inspectedUid: null,
   inspectedLane: null,
   newGame: () => {
@@ -182,7 +215,9 @@ export const useGame = create<GameStore>((set, get) => ({
       : undefined;
     set((s) => ({
       matchSerial: s.matchSerial + 1,
-      state: createInitialState({ playerDeckIds }),
+      lastInfinityDeckIds: null,
+      lastInfinityRealConditions: false,
+      state: createInitialState({ playerDeckIds, mode: 'standard' }),
       resolving: false,
       ptolemyArrowBursts: [],
       miloImpactBursts: [],
@@ -192,13 +227,52 @@ export const useGame = create<GameStore>((set, get) => ({
       ikkiPhoenixBursts: [],
       jamianCrowBursts: [],
       shiryuDragonBursts: [],
-  shuraBladeBursts: [],
-  deathmaskSoulBursts: [],
-  aldebaranImpactBursts: [],
+      shuraBladeBursts: [],
+      shuraSummonBursts: [],
+      siriusBloomBursts: [],
+      deathmaskSoulBursts: [],
+      aldebaranImpactBursts: [],
       ichiClawBursts: [],
       hyogaFrostBursts: [],
       sagaDuplicateBursts: [],
       capellaDiskBursts: [],
+      guiltySacrificeBursts: [],
+      danteChainBursts: [],
+      andromedaRelocateBursts: [],
+      inspectedUid: null,
+      inspectedLane: null,
+    }));
+  },
+  newInfinityGame: (deckIds, realConditions = false) => {
+    const ids = deckIds.slice(0, 12);
+    set((s) => ({
+      matchSerial: s.matchSerial + 1,
+      lastInfinityDeckIds: [...ids],
+      lastInfinityRealConditions: Boolean(realConditions),
+      state: createInitialState({
+        playerDeckIds: ids,
+        mode: 'infinity',
+        infinityRealConditions: Boolean(realConditions),
+      }),
+      resolving: false,
+      ptolemyArrowBursts: [],
+      miloImpactBursts: [],
+      aioliaPlasmaBursts: [],
+      babelFireballBursts: [],
+      aiolosArrowBursts: [],
+      ikkiPhoenixBursts: [],
+      jamianCrowBursts: [],
+      shiryuDragonBursts: [],
+      shuraBladeBursts: [],
+      shuraSummonBursts: [],
+      siriusBloomBursts: [],
+      deathmaskSoulBursts: [],
+      aldebaranImpactBursts: [],
+      ichiClawBursts: [],
+      hyogaFrostBursts: [],
+      sagaDuplicateBursts: [],
+      capellaDiskBursts: [],
+      guiltySacrificeBursts: [],
       danteChainBursts: [],
       andromedaRelocateBursts: [],
       inspectedUid: null,
@@ -229,12 +303,15 @@ export const useGame = create<GameStore>((set, get) => ({
       jamianCrowBursts: [],
       shiryuDragonBursts: [],
       shuraBladeBursts: [],
+      shuraSummonBursts: [],
+      siriusBloomBursts: [],
       deathmaskSoulBursts: [],
       aldebaranImpactBursts: [],
       ichiClawBursts: [],
       hyogaFrostBursts: [],
       sagaDuplicateBursts: [],
       capellaDiskBursts: [],
+      guiltySacrificeBursts: [],
       danteChainBursts: [],
       andromedaRelocateBursts: [],
     });
@@ -249,17 +326,23 @@ export const useGame = create<GameStore>((set, get) => ({
       const aioliaBursts = collectAioliaRevealPlasma(afterAi, afterReveal);
       const babelBursts = collectBabelRevealFireballs(afterAi, afterReveal);
       const aiolosBursts = collectAiolosRevealArrows(afterAi, afterReveal);
-      const ikkiBursts = collectIkkiRevealPhoenix(afterAi, afterReveal);
+      const ikkiBursts = collectIkkiDeathPhoenix(afterAi, afterReveal);
       const beforeJamian = revealPhaseUntilJamian(afterAi);
       const jamianBursts = collectJamianEndOfRevealCrows(beforeJamian, afterReveal);
       const shiryuBursts = collectShiryuDeathBursts(afterAi, afterReveal);
       const shuraBursts = collectShuraRevealBlades(afterAi, afterReveal);
+      const shuraSummonBursts = collectShuraSummonBursts(afterAi, afterReveal);
+      const siriusBursts = [
+        ...collectSiriusRevealBlooms(afterAi, afterReveal),
+        ...collectCosmosRevealBlooms(afterAi, afterReveal),
+      ];
       const deathmaskBursts = collectDeathmaskRevealSouls(afterAi, afterReveal);
       const aldebaranBursts = collectAldebaranRevealImpacts(afterAi, afterReveal);
       const ichiBursts = collectIchiRevealClaws(afterAi, afterReveal);
       const hyogaBursts = collectHyogaRevealFrost(afterAi, afterReveal);
       const sagaBursts = collectSagaRevealDuplicates(afterAi, afterReveal);
       const capellaBursts = collectCapellaRevealDisks(afterAi, afterReveal);
+      const guiltyBursts = collectGuiltyRevealSacrifice(afterAi, afterReveal);
       const danteBursts = collectDanteRevealChains(afterAi, afterReveal);
       const andromedaBursts = collectAndromedaRelocateBursts(afterAi, afterReveal);
 
@@ -290,6 +373,12 @@ export const useGame = create<GameStore>((set, get) => ({
             shuraBladeBursts: prev.shuraBladeBursts.filter(
               (b) => b.sourceUid !== sourceUid,
             ),
+            shuraSummonBursts: prev.shuraSummonBursts.filter(
+              (b) => b.sourceUid !== sourceUid,
+            ),
+            siriusBloomBursts: prev.siriusBloomBursts.filter(
+              (b) => b.sourceUid !== sourceUid,
+            ),
             deathmaskSoulBursts: prev.deathmaskSoulBursts.filter(
               (b) => b.sourceUid !== sourceUid,
             ),
@@ -306,6 +395,9 @@ export const useGame = create<GameStore>((set, get) => ({
               (b) => b.sourceUid !== sourceUid,
             ),
             capellaDiskBursts: prev.capellaDiskBursts.filter(
+              (b) => b.sourceUid !== sourceUid,
+            ),
+            guiltySacrificeBursts: prev.guiltySacrificeBursts.filter(
               (b) => b.sourceUid !== sourceUid,
             ),
             danteChainBursts: prev.danteChainBursts.filter(
@@ -336,8 +428,13 @@ export const useGame = create<GameStore>((set, get) => ({
         const stepAiolia = aioliaBursts.filter((b) => b.sourceUid === frame.uid);
         const stepBabel = babelBursts.filter((b) => b.sourceUid === frame.uid);
         const stepAiolos = aiolosBursts.filter((b) => b.sourceUid === frame.uid);
-        const stepIkki = ikkiBursts.filter((b) => b.sourceUid === frame.uid);
-        const stepShura = shuraBursts.filter((b) => b.sourceUid === frame.uid);
+        const stepShura = frame.shuraDestroyPreview
+          ? shuraBursts.filter((b) => b.sourceUid === frame.uid)
+          : [];
+        const stepShuraSummon = frame.shuraSummonPreview
+          ? shuraSummonBursts.filter((b) => b.sourceUid === frame.uid)
+          : [];
+        const stepSirius = siriusBursts.filter((b) => b.sourceUid === frame.uid);
         const stepDeathmask = deathmaskBursts.filter((b) => b.sourceUid === frame.uid);
         const stepAldebaran = aldebaranBursts.filter((b) => b.sourceUid === frame.uid);
         const stepIchi = ichiBursts.filter((b) => b.sourceUid === frame.uid);
@@ -346,6 +443,7 @@ export const useGame = create<GameStore>((set, get) => ({
           (b) => b.side === 'player' && b.sourceUid === frame.uid,
         );
         const stepCapella = capellaBursts.filter((b) => b.sourceUid === frame.uid);
+        const stepGuilty = guiltyBursts.filter((b) => b.sourceUid === frame.uid);
         const stepDante = danteBursts.filter((b) => b.sourceUid === frame.uid);
         const stepAndromeda = frame.andromedaRelocatePreview
           ? andromedaBursts.filter((b) => b.sourceUid === frame.uid)
@@ -356,15 +454,15 @@ export const useGame = create<GameStore>((set, get) => ({
             stepAiolia.length +
             stepBabel.length +
             stepAiolos.length +
-            stepIkki.length +
-            stepShura.length +
             stepDeathmask.length +
             stepAldebaran.length +
             stepIchi.length +
             stepHyoga.length +
             stepSaga.length +
             stepCapella.length +
-            stepDante.length >
+            stepGuilty.length +
+            stepDante.length +
+            stepSirius.length >
           0;
 
         const at = elapsed;
@@ -376,14 +474,21 @@ export const useGame = create<GameStore>((set, get) => ({
             aioliaPlasmaBursts: [...prev.aioliaPlasmaBursts, ...stepAiolia],
             babelFireballBursts: [...prev.babelFireballBursts, ...stepBabel],
             aiolosArrowBursts: [...prev.aiolosArrowBursts, ...stepAiolos],
-            ikkiPhoenixBursts: [...prev.ikkiPhoenixBursts, ...stepIkki],
             shuraBladeBursts: [...prev.shuraBladeBursts, ...stepShura],
+            shuraSummonBursts: frame.shuraSummonPreview
+              ? [...prev.shuraSummonBursts, ...stepShuraSummon]
+              : prev.shuraSummonBursts.filter((b) => b.sourceUid !== frame.uid),
+            siriusBloomBursts: [...prev.siriusBloomBursts, ...stepSirius],
             deathmaskSoulBursts: [...prev.deathmaskSoulBursts, ...stepDeathmask],
             aldebaranImpactBursts: [...prev.aldebaranImpactBursts, ...stepAldebaran],
             ichiClawBursts: [...prev.ichiClawBursts, ...stepIchi],
             hyogaFrostBursts: [...prev.hyogaFrostBursts, ...stepHyoga],
             sagaDuplicateBursts: [...prev.sagaDuplicateBursts, ...stepSaga],
             capellaDiskBursts: [...prev.capellaDiskBursts, ...stepCapella],
+            guiltySacrificeBursts: [
+              ...prev.guiltySacrificeBursts,
+              ...stepGuilty,
+            ],
             danteChainBursts: [...prev.danteChainBursts, ...stepDante],
             andromedaRelocateBursts: frame.andromedaRelocatePreview
               ? [...prev.andromedaRelocateBursts, ...stepAndromeda]
@@ -396,8 +501,9 @@ export const useGame = create<GameStore>((set, get) => ({
           if (stepAiolia.length) clearBurst(frame.uid, AIOLIA_PLASMA_MS);
           if (stepBabel.length) clearBurst(frame.uid, BABEL_FIREBALL_MS);
           if (stepAiolos.length) clearBurst(frame.uid, AIOLOS_ARROW_MS);
-          if (stepIkki.length) clearBurst(frame.uid, IKKI_PHOENIX_MS);
           if (stepShura.length) clearBurst(frame.uid, SHURA_BLADE_MS);
+          if (stepShuraSummon.length) clearBurst(frame.uid, SHURA_SUMMON_MS);
+          if (stepSirius.length) clearBurst(frame.uid, SIRIUS_BLOOM_MS);
           if (stepDeathmask.length) clearBurst(frame.uid, DEATHMASK_SOULS_MS);
           if (stepAldebaran.length) clearBurst(frame.uid, ALDEBARAN_IMPACT_MS);
           if (stepIchi.length) {
@@ -410,6 +516,12 @@ export const useGame = create<GameStore>((set, get) => ({
           if (stepHyoga.length) clearBurst(frame.uid, HYOGA_FROST_MS);
           if (stepSaga.length) clearBurst(frame.uid, SAGA_DUPLICATE_MS);
           if (stepCapella.length) clearBurst(frame.uid, CAPELLA_DISKS_MS);
+          if (stepGuilty.length) {
+            clearBurst(
+              frame.uid,
+              guiltySacrificeDurationMs(stepGuilty[0]?.targets.length ?? 0),
+            );
+          }
           if (stepDante.length) clearBurst(frame.uid, DANTE_CHAIN_MS);
           if (stepAndromeda.length) clearBurst(frame.uid, ANDROMEDA_RELOCATE_MS);
         }, at);
@@ -418,18 +530,27 @@ export const useGame = create<GameStore>((set, get) => ({
         if (frame.andromedaRelocatePreview) {
           elapsed += ANDROMEDA_RELOCATE_MS;
         }
-        if (hasEffect) {
+        if (frame.shuraSummonPreview) {
+          elapsed += SHURA_SUMMON_MS;
+        }
+        if (frame.shuraDestroyPreview) {
+          elapsed += SHURA_BLADE_MS;
+        }
+        if (stepGuilty.length) {
+          elapsed += guiltySacrificeDurationMs(stepGuilty[0]?.targets.length ?? 0);
+        } else if (hasEffect) {
           elapsed += REVEAL_EFFECT_PAUSE_MS;
         }
       });
 
-      // 3) Résolution finale : Jamian, comète Shiryu, tour suivant.
+      // 3) Résolution finale : Jamian, comète Shiryu, phénix Ikki, tour suivant.
       setTimeout(() => {
         if (jamianBursts.length > 0) {
           set({
             state: beforeJamian,
             resolving: false,
             shiryuDragonBursts: shiryuBursts,
+            ikkiPhoenixBursts: ikkiBursts,
             jamianCrowBursts: jamianBursts,
           });
           setTimeout(() => {
@@ -440,11 +561,15 @@ export const useGame = create<GameStore>((set, get) => ({
             state: afterReveal,
             resolving: false,
             shiryuDragonBursts: shiryuBursts,
+            ikkiPhoenixBursts: ikkiBursts,
             jamianCrowBursts: [],
           });
         }
         if (shiryuBursts.length > 0) {
           setTimeout(() => set({ shiryuDragonBursts: [] }), SHIRYU_DRAGON_MS);
+        }
+        if (ikkiBursts.length > 0) {
+          setTimeout(() => set({ ikkiPhoenixBursts: [] }), IKKI_PHOENIX_MS);
         }
       }, elapsed);
     }, 600);

@@ -27,8 +27,8 @@ export const CARDS: CardDefinition[] = [
   {
     id: 'black-dragon-double',
     name: 'Double du Dragon Noir',
-    cost: 1,
-    power: 3,
+    cost: 2,
+    power: 6,
     faction: 'black',
     flavor: 'Un mirage brutal.',
   },
@@ -133,15 +133,15 @@ export const CARDS: CardDefinition[] = [
   {
     id: 'shun',
     name: 'Andromède Shun',
-    cost: 1,
-    power: 1,
+    cost: 2,
+    power: 2,
     faction: 'bronze',
     flavor: 'Chaîne nébulaire.',
     ability: {
       kind: 'ongoing',
       id: 'ongoing-buff-allies-here',
-      text: 'Continu : +1 à vos autres alliés ici.',
-      params: { amount: 1 },
+      text: 'Continu : +2 à vos autres alliés ici.',
+      params: { amount: 2 },
     },
   },
   {
@@ -258,15 +258,14 @@ export const CARDS: CardDefinition[] = [
   {
     id: 'ikki',
     name: 'Phénix Ikki',
-    cost: 2,
-    power: 3,
+    cost: 1,
+    power: 1,
     faction: 'bronze',
     flavor: 'Renaît de ses cendres.',
     ability: {
-      kind: 'on-reveal',
-      id: 'phoenix-sacrifice-bounce',
-      text: 'Au révélé (1×) : détruit votre allié le plus faible ici, gagne sa puissance, puis retourne en main.',
-      params: { oncePerGame: 1 },
+      kind: 'on-destroy',
+      id: 'ikki-death-double-bounce',
+      text: 'À la destruction : double sa puissance et retourne en main.',
     },
   },
   {
@@ -323,6 +322,19 @@ export const CARDS: CardDefinition[] = [
       params: { perDestroy: 2 },
     },
   },
+  {
+    id: 'guilty',
+    name: 'Guilty',
+    cost: 3,
+    power: 3,
+    faction: 'neutral',
+    flavor: 'Le masque de la haine.',
+    ability: {
+      kind: 'on-reveal',
+      id: 'guilty-sacrifice-allies-absorb',
+      text: 'Au révélé : détruit vos autres alliés ici, puis gagne la somme de leurs puissances.',
+    },
+  },
 
   // ----- Coût 3 -----
   {
@@ -368,15 +380,15 @@ export const CARDS: CardDefinition[] = [
   {
     id: 'milo',
     name: 'Milo du Scorpion',
-    cost: 5,
-    power: 8,
+    cost: 4,
+    power: 5,
     faction: 'gold',
     flavor: 'Aiguille Écarlate.',
     ability: {
-      kind: 'on-reveal',
-      id: 'debuff-all-enemies-2',
-      text: 'Au révélé : −2 permanent à toutes les cartes adverses ici.',
-      params: { amount: 2 },
+      kind: 'ongoing',
+      id: 'ongoing-increase-enemy-hand-cost',
+      text: 'Continu : les cartes dans la main de l\u2019adversaire coûtent toutes +1.',
+      params: { amount: 1 },
     },
   },
   {
@@ -400,9 +412,9 @@ export const CARDS: CardDefinition[] = [
     faction: 'black',
     flavor: 'Ombre du Dragon.',
     ability: {
-      kind: 'on-reveal',
-      id: 'black-dragon-summon-double',
-      text: 'Au révélé : ajoute un double (sans effet) sur votre côté ici.',
+      kind: 'on-destroy',
+      id: 'black-dragon-death-summon-double',
+      text: 'À la destruction : dépose son double (2/6, sans effet) sur ce lieu.',
       params: { tokenId: 'black-dragon-double' },
     },
   },
@@ -417,10 +429,16 @@ export const CARDS: CardDefinition[] = [
   {
     id: 'sirius',
     name: 'Sirius du Grand Chien',
-    cost: 3,
-    power: 5,
+    cost: 1,
+    power: 2,
     faction: 'silver',
     flavor: 'Croc du Grand Chien.',
+    ability: {
+      kind: 'on-reveal',
+      id: 'sirius-buff-top-deck',
+      text: 'Au révélé : +3 à la carte au-dessus de votre deck.',
+      params: { amount: 3 },
+    },
   },
   {
     id: 'babel',
@@ -451,15 +469,14 @@ export const CARDS: CardDefinition[] = [
   {
     id: 'moses',
     name: 'Moses de la Baleine',
-    cost: 3,
-    power: 3,
+    cost: 4,
+    power: 1,
     faction: 'silver',
     flavor: 'Le poids des marées.',
     ability: {
       kind: 'on-reveal',
-      id: 'moses-buff-if-ally-died',
-      text: 'Au révélé : si un allié a été détruit, +2 à Moses.',
-      params: { amount: 2 },
+      id: 'moses-place-top-deck-here',
+      text: 'Au révélé : ajoute la carte du dessus de votre deck ici (s\u2019il reste de la place) ; elle joue son effet Au révélé.',
     },
   },
   {
@@ -685,14 +702,13 @@ export const CARDS: CardDefinition[] = [
     id: 'shura',
     name: 'Shura du Capricorne',
     cost: 4,
-    power: 4,
+    power: 8,
     faction: 'gold',
     flavor: 'Excalibur.',
     ability: {
       kind: 'on-reveal',
-      id: 'shura-destroy-power-ge10',
-      text: 'Au révélé : détruit les cartes ennemies de puissance ≥ 6 sur ce lieu.',
-      params: { minPower: 6 },
+      id: 'shura-reveal-and-destroy',
+      text: 'Au révélé : invoque une carte du deck adverse de son côté ici ; elle se révèle et joue son effet. Détruit-la ensuite si sa puissance est inférieure et qu\u2019elle n\u2019est pas protégée.',
     },
   },
   // (mis de côté) Shion du Bélier
@@ -721,14 +737,14 @@ export const CARDS: CardDefinition[] = [
   {
     id: 'orphee',
     name: 'Orphée de la Lyre',
-    cost: 5,
-    power: 5,
+    cost: 3,
+    power: 4,
     faction: 'silver',
     flavor: 'Mélodie fatale.',
     ability: {
       kind: 'on-reveal',
-      id: 'orphee-bounce-enemy-if-losing',
-      text: 'Au révélé : si vous perdez ce lieu, renvoie un ennemi d’ici en main.',
+      id: 'orphee-switch-weakest-here',
+      text: 'Au révélé : la carte à la puissance la plus basse de votre côté ici change de côté.',
     },
   },
 

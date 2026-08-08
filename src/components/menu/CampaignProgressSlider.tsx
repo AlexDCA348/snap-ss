@@ -2,11 +2,13 @@ import { useEffect, useMemo, useRef } from 'react';
 import {
   getCampaignChapterSteps,
 } from '../../collection/campaignProgress';
+import { useAppStore } from '../../store/appStore';
 import { useCollectionStore } from '../../store/collectionStore';
 
 /** Slider horizontal manuel — étapes de progression campagne. */
 export function CampaignProgressSlider() {
   const collection = useCollectionStore((s) => s.collection);
+  const goToArmory = useAppStore((s) => s.goToArmory);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const steps = useMemo(
@@ -39,17 +41,21 @@ export function CampaignProgressSlider() {
         className="campaign-slider__track flex gap-2 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-1 px-4"
       >
         {steps.map((step, index) => (
-          <div
+          <button
             key={step.chapterId}
+            type="button"
+            onClick={() => goToArmory(step.chapterId)}
             className={[
-              'campaign-slider__slide snap-center shrink-0 w-[min(72vw,240px)] rounded-xl border px-3 py-2.5 transition',
+              'campaign-slider__slide snap-center shrink-0 w-[min(72vw,240px)] rounded-xl border px-3 py-2.5 transition text-left',
               step.status === 'current'
                 ? 'border-gold-400/55 bg-gold-500/12 shadow-[0_0_20px_rgba(212,175,55,0.12)]'
                 : step.status === 'complete'
                   ? 'border-emerald-400/35 bg-emerald-500/8'
                   : 'border-white/10 opacity-55',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black/30',
             ].join(' ')}
             aria-current={step.status === 'current' ? 'step' : undefined}
+            aria-label={`Ouvrir les armures de ${step.label}`}
           >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
@@ -104,7 +110,7 @@ export function CampaignProgressSlider() {
                 Terminez l&apos;étape précédente
               </p>
             )}
-          </div>
+          </button>
         ))}
       </div>
     </div>

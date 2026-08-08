@@ -15,8 +15,13 @@ interface Props {
   seiyaAuraActive?: boolean;
 }
 
+/** Ignore `?v=` / hash — sinon le cache-bust classe les PNG en « photo ». */
+function artPathOnly(src: string): string {
+  return src.split(/[?#]/, 1)[0]?.toLowerCase() ?? '';
+}
+
 function formatFromSrc(src: string): CardArtFormat {
-  return src.toLowerCase().endsWith('.png') ? 'png' : 'photo';
+  return artPathOnly(src).endsWith('.png') ? 'png' : 'photo';
 }
 
 function isDuplicateArt(defId: string): boolean {
@@ -45,7 +50,7 @@ export function CardArt({
 
   const src = candidates[candidateIndex];
   const exhausted = candidateIndex >= candidates.length;
-  const isPng = Boolean(src?.toLowerCase().endsWith('.png'));
+  const isPng = Boolean(src && artPathOnly(src).endsWith('.png'));
   const artInvert = isDuplicateArt(defId);
   const objectPosition = getCardArtObjectPosition(defId);
   const isSeiyaCosmos = isSeiyaCard(defId) && continuousVfxActive && seiyaAuraActive;
